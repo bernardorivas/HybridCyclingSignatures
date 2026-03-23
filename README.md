@@ -6,8 +6,8 @@ Given a hybrid system $H = (X, \varphi, G, r)$ with state space $X$, continuous 
 
 ## Systems
 
-- **Rimless Wheel** (2D state: $[\theta, \omega]$) -- stable, primary example.
-- **Compass-Gait Biped** (4D state: $[\theta_{ns}, \theta_s, \dot\theta_{ns}, \dot\theta_s]$) -- experimental.
+- **Rimless Wheel** (2D state: $[\theta, \dot{\theta}]$) -- toy example.
+- **Compass-Gait Biped** (4D state: $[\theta_{ns}, \theta_s, \dot\theta_{ns}, \dot\theta_s]$) -- example.
 
 ## Setup
 
