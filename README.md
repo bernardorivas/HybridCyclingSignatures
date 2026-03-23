@@ -2,7 +2,7 @@
 
 Learning continuous manifold embeddings of discontinuous hybrid dynamical systems via neural networks trained on a mapping-cylinder construction. Companion code for the Hybrid Cycling Signatures manuscript.
 
-Given a hybrid system $H = (X, \varphi, G, r)$ with state space $X$, continuous flow $\varphi$, guard $G$, and reset map $r$, the code learns an embedding of the hybrid suspension $\Sigma_H(X) = X \cup (G \times [0,1]) / {\sim}$ into $\mathbb{R}^{d+1}$ such that the discrete semiflow $\Phi_H(\tau, \cdot)$ lifts to a continuous map in the embedded space.
+Given a hybrid system $H = (X, \varphi, G, r)$ with state space $X$, continuous flow $\varphi$, guard $G$, and reset map $r$, the code learns an embedding of the hybrid suspension $\Sigma_H(X) = X \cup (G \times [0,1]) / {\sim}$ into $\mathbb{R}^{d+k}$ for some $k\geq 0$ such that the discrete semiflow $\Phi_H(\tau, \cdot)$ lifts to a continuous map in the embedded space.
 
 ## Systems
 
