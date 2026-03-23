@@ -48,9 +48,9 @@ Three cooperating networks learn the round-trip `state space -> continuous manif
 
 | Network | Signature | Role |
 |---------|-----------|------|
-| **E** (ExtrusionEncoder) | $[\mathbf{x}, s] \to \mathbb{R}^{d+1}$ | Identity at $s=0$; learned deformation scaled by $s$ on the mapping cylinder |
-| **F** (FlowPredictor) | $\mathbb{R}^{d+1} \to \mathbb{R}^{d+1}$ | Residual network learning the time-$\tau$ discrete semiflow |
-| **D** (StabilizationDecoder) | $\mathbb{R}^{d+1} \to \mathbf{x}$ | Inverts E; forces $s=0$ in output |
+| **E** (Encoder) | $[\mathbf{x}, s] \to \mathbb{R}^{d+k}$ | Identity at $s=0$; learned deformation scaled by $s$ on the mapping cylinder |
+| **F** (FlowPredictor) | $\mathbb{R}^{d+k} \to \mathbb{R}^{d+k}$ | Residual network learning the time-$\tau$ discrete semiflow |
+| **D** (Decoder) | $\mathbb{R}^{d+k} \to \mathbf{x}$ | Inverts E; forces $s=0$ in output |
 
 All are MLPs with GELU activations. Embedding dimension is `state_dim + 1` (plus optional `embed_extra`).
 
