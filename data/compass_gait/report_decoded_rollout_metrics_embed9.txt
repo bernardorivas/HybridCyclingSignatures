@@ -1,0 +1,24 @@
+Compass-gait decoded-rollout evaluation [embed9]
+============================================================
+model:  C:\Users\roger\OneDrive - Umich\Kaito Iwasaki\The Vault\Research\2026\HybridCyclingSignatures\runs\compass_gait\model_embed9.pt
+embed_dim: 9 (embed_extra=4)
+IC:     [-0.35586245  0.20481143 -0.41792653 -1.06208457]
+arcs:   8  jumps: 8
+samples: 1615  (arc: 1215, bridge: 400)
+
+[D(E(x)) round-trip]
+  state err  mean=9.411e-02  median=5.322e-02  p95=2.788e-01  max=2.191e+00
+  s err      mean=1.470e-02  max=9.441e-01
+  arc-only state err   mean=6.014e-02  max=1.533e-01
+  bridge state err     mean=1.973e-01  max=2.191e+00
+
+[Semiflow one-step D(F(E(x_i))) vs x_{i+1}]
+  state err  mean=3.928e-01  median=3.752e-01  p95=5.850e-01  max=2.460e+00
+
+[Semiflow long-horizon rollout D(F^k(E(x0)))]
+  state err  mean=7.619e+35  p95=9.027e+35
+  state err at step 10: 9.817e-01
+  state err at step 25: 3.202e+00
+  state err at step 50: 1.301e+00
+  state err at step 100: 8.449e+00
+  state err at step 200: 2.806e+04
