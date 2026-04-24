@@ -1,0 +1,23 @@
+# Cycling-signature H_1 births on compass lift (base_name=continuous_lift_relaxed_embed9)
+# full grid of (boxsize, sb_radius, C=boxsize*sb_radius, beta_1(Y), rank, n_births, max_birth) shown below,
+# followed by the explicit birth vector at the canonical cell.
+#
+# boxsize,sb_radius,C,beta_1,rank,n_births,max_birth
+# 0.3,1,0.3,1,1,1,0.023601015829933902
+# 0.2,1,0.2,1,1,1,0.023601015829933902
+# 0.1,1,0.1,4,1,1,0.06813793010878767
+# 0.05,1,0.05,12,3,3,0.017512963059451606
+# 0.3,2,0.6,5,5,5,0.19458660772499756
+# 0.2,2,0.4,7,4,4,0.028076334739625453
+# 0.1,2,0.2,5,2,2,0.025250816297973235
+# 0.05,2,0.1,13,3,3,0.01904887610321545
+# 0.3,4,1.2,3,3,3,0.13636025594249895
+# 0.2,4,0.8,3,3,3,0.03356579272429872
+# 0.1,4,0.4,5,4,4,0.06565949003966474
+# 0.05,4,0.2,11,3,3,0.025250816297973235
+#
+# Canonical cell (first (boxsize, sb_radius) with beta_1>0 and rank>0):
+# boxsize=0.3, sb_radius=1
+#
+bar_index,birth
+1,0.023601015829933902

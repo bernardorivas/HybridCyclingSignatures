@@ -1,0 +1,19 @@
+
+============================================================
+PHASE A  |  RELAXED-SPACE EMBED9 ENCODER DIAGNOSTICS (compass)
+============================================================
+model: C:\Users\roger\OneDrive - Umich\Kaito Iwasaki\The Vault\Research\2026\HybridCyclingSignatures\runs\compass_gait\model_embed9.pt
+embed_dim: 9
+trajectory: 20 arcs, 20 jumps, n_s=50
+lift shape: (4041, 9)
+
+[1] Reconstruction D(E(.)) vs input
+  full err (arcs, s=0)      mean=6.012e-02  median=5.152e-02  p95=1.288e-01  max=1.699e-01
+  full err (bridges)        mean=2.055e-01  median=5.890e-02  p95=7.936e-01  max=2.543e+00
+  state err (arcs)          mean=5.934e-02  median=5.061e-02  p95=1.287e-01  max=1.698e-01
+  state err (bridges)       mean=1.984e-01  median=5.503e-02  p95=7.926e-01  max=2.350e+00
+
+[2] Finite-difference tangent quality
+  pre-normalize norm: median=1.604e-02  min=3.160e-04
+  pre-jump  (arc -> bridge): median=8.2 deg  max=14.1 deg  (n=20)
+  post-jump (bridge -> arc): median=79.2 deg  max=84.6 deg  (n=19)

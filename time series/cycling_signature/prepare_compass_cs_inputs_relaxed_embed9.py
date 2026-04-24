@@ -111,7 +111,9 @@ _log(f"trajectory: {len(segments)} arcs, {len(jump_pairs)} jumps, n_s={n_s}")
 _log(f"lift shape: {Z.shape}")
 
 with torch.no_grad():
-    x_rec = D_dec(torch.tensor(X_in, dtype=torch.float32)).numpy()
+    # Proper round-trip: D(E(x)). In the baseline script this was written as
+    # D_dec(X_in) directly; that only happened to work when embed_dim == n+1.
+    x_rec = D_dec(torch.as_tensor(Z, dtype=torch.float32)).numpy()
 arc_mask = np.array([t[0] == "arc" for t in tags])
 br_mask = ~arc_mask
 full_err = np.linalg.norm(x_rec - X_in, axis=1)
