@@ -1,0 +1,42 @@
+
+============================================================
+PHASE A  |  RELAXED-SPACE ENCODER DIAGNOSTICS (compass)
+============================================================
+model: C:\Users\roger\OneDrive - Umich\Kaito Iwasaki\The Vault\Research\2026\HybridCyclingSignatures\runs\compass_gait\model.pt
+trajectory: 20 arcs, 20 jumps, n_s=50
+lift shape: (4041, 5)  (samples, latent_dim)
+
+[1] Reconstruction D(E(.)) vs input  (injectivity witness on sampled data)
+  full err (arcs, s=0)      mean=1.018e+01  median=6.398e+00  p95=3.124e+01  max=3.434e+01
+  full err (bridges)        mean=1.273e+01  median=1.412e+01  p95=1.919e+01  max=2.279e+01
+  state err (arcs)          mean=1.016e+01  median=6.384e+00  p95=3.124e+01  max=3.434e+01
+  state err (bridges)       mean=1.266e+01  median=1.407e+01  p95=1.901e+01  max=2.262e+01
+  note: the decoder now reconstructs s freely (no forcing); bridge
+        samples near s=0 or s=1 are masked during Phase II training
+        (manuscript Section 4) so some residual near boundaries is expected.
+
+[2] Latent near-collisions from time-distant samples (collapse screen)
+  min time-distant latent distance:  7.032e-06
+  median time-distant latent/input ratio: 0.279
+  p5 ratio:                          0.110  (low = potential collapse)
+  pairs with ratio < 0.25 AND input_dist > 0.1: 361/4041
+    sample 0 ('arc', 0) <-> 606 ('arc', 3): d_lat=5.95e-02  d_inp=3.82e-01  ratio=0.16
+    sample 1 ('arc', 0) <-> 607 ('arc', 3): d_lat=5.93e-02  d_inp=4.14e-01  ratio=0.14
+    sample 2 ('arc', 0) <-> 608 ('arc', 3): d_lat=5.89e-02  d_inp=4.12e-01  ratio=0.14
+    sample 3 ('arc', 0) <-> 609 ('arc', 3): d_lat=5.88e-02  d_inp=4.12e-01  ratio=0.14
+    sample 4 ('arc', 0) <-> 610 ('arc', 3): d_lat=5.89e-02  d_inp=4.12e-01  ratio=0.14
+
+[3] Finite-difference tangent quality
+  pre-normalize norm: median=1.509e-02  p5=4.824e-03  min=4.151e-04
+  samples with pre-norm < 1e-6: 0 (unit-normalization yields direction from noise at these points)
+  pre-jump  (arc -> bridge): median=1.7 deg  max=2.1 deg  (n=20)
+  post-jump (bridge -> arc): median=32.5 deg  max=36.8 deg  (n=19)
+
+[4] Bridge-to-bridge separation under David's DynamicDistance
+    metric: max(||p-q||, C*||v-w||) with C = boxsize * sb_radius
+  C=0.05:  inter_bridge_min=7.032e-06  arc_step_median=1.017e-02  rho=0.00
+  C=0.20:  inter_bridge_min=7.323e-06  arc_step_median=1.736e-02  rho=0.00
+  C=0.50:  inter_bridge_min=1.247e-05  arc_step_median=2.290e-02  rho=0.00
+  C=1.00:  inter_bridge_min=1.247e-05  arc_step_median=3.390e-02  rho=0.00
+  note: 5 bridges here are 5 observations of ONE canonical jump;
+        low inter-bridge distance is expected and topologically correct.

@@ -93,18 +93,43 @@ class HybridSuspensionConfig:
         return self.state_dim + 1 + self.embed_extra
     
     # ---------------------------------------------------------
-    # Loss Optimization Weights
+    # Loss Optimization Weights (manuscript eq loss_total)
     # ---------------------------------------------------------
-    weight_comm: float = 1.0     # F(E(x)) = E(Phi(x))
-    weight_glue: float = 3.0     # Enforce E(guard, 1) == E(reset, 0)
-    weight_recon: float = 0.1    # Prevent manifold collapse
-    
+    weight_dyn: float = 1.0       # L_dyn: Ψ(Δt, E(x)) ≈ E(Φ'(Δt, x))
+    weight_glue: float = 3.0      # L_glue: E(g, 1) ≈ E(r(g), 0)
+    weight_recon: float = 1.0     # L_recon: D(E(x)) ≈ x (Phase II only)
+    weight_conf: float = 0.01     # L_conf: conformal Jacobian
+    weight_coll: float = 1.0      # L_coll: anti-collapse via per-coord variance
+    weight_utb: float = 1.0       # L_utb: finite-diff tangent at s=0 and s=1
+
+    # Backward-compat alias (older scripts referenced `weight_comm`).
+    @property
+    def weight_comm(self) -> float: return self.weight_dyn
+
     # ---------------------------------------------------------
-    # Hardware & Training Hyperparameters
+    # Loss hyperparameters
     # ---------------------------------------------------------
+    collapse_threshold: float = 0.1   # Λ in L_coll: min per-coord variance
+    recon_boundary_eps: float = 0.05  # ε for boundary masking in L_recon
+    utb_num_samples: int = 256        # guard-set samples per L_utb eval
+    utb_finite_diff_h: float = 0.02   # h for v_cyl finite-difference
+
+    # ---------------------------------------------------------
+    # Two-phase training schedule
+    # ---------------------------------------------------------
+    phase1_epochs: int = 120          # E + F, five terms (no recon)
+    phase2_epochs: int = 40           # D alone, recon with boundary mask
+    phase1_lr: float = 8e-4
+    phase2_lr: float = 2e-3           # larger LR for decoder-only phase
+
+    # Deprecated: kept for compatibility; train loops should use phase*_epochs.
     epochs: int = 100
+
+    # ---------------------------------------------------------
+    # Hardware & Optim
+    # ---------------------------------------------------------
     batch_size: int = 1024
-    lr: float = 8e-4
+    lr: float = 8e-4                  # default; phase loops override
     weight_decay: float = 1e-5
 
 config = HybridSuspensionConfig()

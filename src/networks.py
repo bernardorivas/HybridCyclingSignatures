@@ -1,10 +1,18 @@
+"""
+Learning architecture from Section 4 of the manuscript.
+
+Three components:
+  Encoder        E : R^{n+1} -> R^d      generic MLP, initialised approx identity
+  Semiflow       F : R+ x R^d -> R^d     time-conditioned, F(y, dt) = y + MLP(y, dt)
+  Decoder        D : R^d -> R^{n+1}      generic MLP, no s=0 forcing
+"""
 import torch
 import torch.nn as nn
 from config import config
 
 
 def _build_mlp(in_dim, out_dim, hidden_dim, num_layers):
-    """Build an MLP with the given depth, using GELU activations between layers."""
+    """MLP with GELU activations."""
     layers = [nn.Linear(in_dim, hidden_dim), nn.GELU()]
     for _ in range(num_layers - 2):
         layers += [nn.Linear(hidden_dim, hidden_dim), nn.GELU()]
@@ -12,81 +20,93 @@ def _build_mlp(in_dim, out_dim, hidden_dim, num_layers):
     return nn.Sequential(*layers)
 
 
-class ExtrusionEncoder(nn.Module):
+class Encoder(nn.Module):
     """
-    Encoder E : R^{d+1} -> R^{embed_dim}
+    Generic encoder E : R^{n+1} -> R^d (manuscript Section 4, architecture block).
 
-    Maps (state, s) into the embedding space. Identity at s=0 (padded with
-    zeros when embed_dim > d+1); learned deformation scaled by s on the
-    mapping cylinder (s > 0).
+    Realized as a residual MLP around an identity-padded base:
+        E(x) = pad(x, d) + MLP(x)
+    with the final MLP layer initialised near zero so that E(x) approximates
+    the identity (padded with small random noise in coords n+1..d) at the
+    start of training. Nothing architecturally pins E at s = 0; injectivity
+    on the base space is a learned property.
     """
     def __init__(self, cfg):
         super().__init__()
-        self.d = cfg.state_dim
-        self.e = cfg.embed_dim      # output dimension
-        self.net = _build_mlp(self.d + 1, self.e, cfg.hidden_dim, cfg.num_layers)
+        self.d_in = cfg.state_dim + 1            # n + 1
+        self.d_out = cfg.embed_dim               # d
+        self.net = _build_mlp(self.d_in, self.d_out, cfg.hidden_dim, cfg.num_layers)
+        # Final layer near-zero init: approximate identity on input dims,
+        # small random perturbation on padded dims.
+        with torch.no_grad():
+            last = self.net[-1]
+            last.weight.mul_(0.01)
+            last.bias.zero_()
 
     def forward(self, x):
-        # x: [batch, d+1]  (state coords + cylinder parameter s)
-        s = x[:, self.d : self.d + 1]
-        base_mask = (s.squeeze(-1) == 0)
-
-        y = torch.zeros(x.shape[0], self.e, device=x.device, dtype=x.dtype)
-
-        # Base space (s=0): identity embedding (zero-padded if embed_dim > d+1)
-        if base_mask.any():
-            y[base_mask, :self.d + 1] = x[base_mask]
-
-        # Cylinder (s>0): learned deformation scaled by s
-        if (~base_mask).any():
-            x_cyl = x[~base_mask]
-            s_cyl = x_cyl[:, self.d : self.d + 1]
-            base_point = torch.zeros(x_cyl.shape[0], self.e,
-                                     device=x.device, dtype=x.dtype)
-            base_point[:, :self.d + 1] = x_cyl
-            base_point[:, self.d] = 0  # project s to 0
-            y[~base_mask] = base_point + s_cyl * self.net(x_cyl)
-        return y
+        # x: (batch, n+1). Out-of-place padding keeps the function vmap-safe
+        # (needed by the conformal loss's per-sample Jacobian).
+        pad = self.d_out - self.d_in
+        if pad > 0:
+            zeros = torch.zeros(x.shape[0], pad, device=x.device, dtype=x.dtype)
+            base = torch.cat([x, zeros], dim=-1)
+        else:
+            base = x
+        return base + self.net(x)
 
 
-class StabilizationDecoder(nn.Module):
+class Decoder(nn.Module):
     """
-    Decoder D : R^{embed_dim} -> R^{d+1}
+    Generic decoder D : R^d -> R^{n+1} (manuscript Section 4).
 
-    Inverts E via small residual correction; forces s=0 in output.
+    No s = 0 forcing; the decoder freely reconstructs the cylinder parameter.
+    Residual form around a truncation to the first n+1 latent dims for
+    training stability.
     """
     def __init__(self, cfg):
         super().__init__()
-        self.d = cfg.state_dim
-        self.e = cfg.embed_dim
-        self.net = _build_mlp(self.e, self.d + 1, cfg.hidden_dim, cfg.num_layers)
+        self.d_in = cfg.embed_dim                # d
+        self.d_out = cfg.state_dim + 1           # n + 1
+        self.net = _build_mlp(self.d_in, self.d_out, cfg.hidden_dim, cfg.num_layers)
 
     def forward(self, y):
-        # y: [batch, embed_dim]
-        # Truncate to d+1 as the base prediction, then add learned correction
-        x_base = y[:, :self.d + 1]
-        correction = self.net(y)
-        x_recon = x_base + (0.1 * correction)
-        x_recon[:, self.d : self.d + 1] = 0  # Force s=0
-        return x_recon
+        # y: (batch, d)
+        base = y[:, :self.d_out]
+        return base + self.net(y)
 
 
 class FlowPredictor(nn.Module):
     """
-    Discrete-time semiflow F : R^{embed_dim} -> R^{embed_dim}
+    Time-conditioned discrete semiflow F : R+ x R^d -> R^d (manuscript Ψ).
+
+    Implemented as F(y, dt) = y + MLP(concat(y, dt)). At inference / training
+    time the data is always sampled at a fixed step dt = integration_tau,
+    but the time-conditioning allows evaluation at other step sizes.
     """
     def __init__(self, cfg):
         super().__init__()
-        self.net = _build_mlp(cfg.embed_dim, cfg.embed_dim,
+        self.net = _build_mlp(cfg.embed_dim + 1, cfg.embed_dim,
                               cfg.hidden_dim, cfg.num_layers)
 
-    def forward(self, y):
-        return y + self.net(y)
+    def forward(self, y, dt):
+        # y: (batch, d)
+        # dt: float or tensor of shape (batch,) or (batch, 1)
+        if isinstance(dt, (int, float)):
+            dt_t = torch.full((y.shape[0], 1), float(dt),
+                              device=y.device, dtype=y.dtype)
+        else:
+            dt_t = torch.as_tensor(dt, device=y.device, dtype=y.dtype)
+            if dt_t.dim() == 0:
+                dt_t = dt_t.expand(y.shape[0], 1)
+            elif dt_t.dim() == 1:
+                dt_t = dt_t.unsqueeze(-1)
+        inp = torch.cat([y, dt_t], dim=-1)
+        return y + self.net(inp)
 
 
 class SuspensionNetworks(nn.Module):
     def __init__(self, cfg=config):
         super().__init__()
-        self.E = ExtrusionEncoder(cfg)
+        self.E = Encoder(cfg)
         self.F = FlowPredictor(cfg)
-        self.D = StabilizationDecoder(cfg)
+        self.D = Decoder(cfg)

@@ -1,0 +1,8 @@
+[deps]
+CyclingSignatures = "b750c39d-317b-4ed7-a266-e63a9df6ec54"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+StepFunctions = "e7075c2b-82aa-4c73-be05-3661d86852bd"
+
+[compat]
+StepFunctions = "1.0.0"

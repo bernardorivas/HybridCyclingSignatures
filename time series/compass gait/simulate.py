@@ -52,6 +52,11 @@ def _vector_field(t, state):
     return [dq[0], dq[1], ddq[0], ddq[1]]
 
 
+def state_velocity(state):
+    """Return the continuous-time compass vector field evaluated at ``state``."""
+    return np.asarray(_vector_field(0.0, np.asarray(state, dtype=float)), dtype=float)
+
+
 def _guard_event(t, state):
     """Guard: theta_ns + theta_s + 2*phi = 0, with theta_ns > theta_s."""
     if state[0] - state[1] > 0.01:
