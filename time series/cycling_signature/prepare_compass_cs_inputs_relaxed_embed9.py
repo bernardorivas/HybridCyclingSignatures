@@ -124,16 +124,45 @@ def _row(lbl, arr):
          f"p95={np.percentile(arr, 95):.3e}  max={arr.max():.3e}")
 
 _log("")
-_log("[1] Reconstruction D(E(.)) vs input")
+_log("[1] Reconstruction D(E(.)) vs input  (injectivity witness on sampled data)")
 _row("full err (arcs, s=0)", full_err[arc_mask])
 _row("full err (bridges)", full_err[br_mask])
 _row("state err (arcs)", state_err[arc_mask])
 _row("state err (bridges)", state_err[br_mask])
 
-# Tangent quality
+# ---------------- 2. Latent near-collision screen ----------------
 _log("")
-_log("[2] Finite-difference tangent quality")
+_log("[2] Latent near-collisions from time-distant samples (collapse screen)")
+from scipy.spatial.distance import pdist, squareform  # noqa: E402
+d_lat = squareform(pdist(Z))
+d_inp = squareform(pdist(X_in))
+N = len(Z)
+time_gap = 20
+mask = np.abs(np.arange(N)[:, None] - np.arange(N)[None, :]) > time_gap
+d_lat_masked = np.where(mask, d_lat, np.inf)
+nn_lat = d_lat_masked.min(axis=1)
+nn_idx = d_lat_masked.argmin(axis=1)
+nn_inp = d_inp[np.arange(N), nn_idx]
+ratio = nn_lat / np.maximum(nn_inp, 1e-12)
+_log(f"  min time-distant latent distance:  {nn_lat.min():.3e}")
+_log(f"  median time-distant latent/input ratio: {np.median(ratio):.3f}")
+_log(f"  p5 ratio:                          {np.percentile(ratio, 5):.3f}  (low = potential collapse)")
+suspicious = (ratio < 0.25) & (nn_inp > 0.1)
+_log(f"  pairs with ratio < 0.25 AND input_dist > 0.1: {int(suspicious.sum())}/{N}")
+if suspicious.any():
+    idx = np.where(suspicious)[0][:5]
+    for i in idx:
+        j = nn_idx[i]
+        _log(
+            f"    sample {i} {tags[i]} <-> {j} {tags[j]}: "
+            f"d_lat={nn_lat[i]:.2e}  d_inp={nn_inp[i]:.2e}  ratio={ratio[i]:.2f}"
+        )
+
+# ---------------- 3. Tangent quality ----------------
+_log("")
+_log("[3] Finite-difference tangent quality")
 _log(f"  pre-normalize norm: median={np.median(tangent_norms_pre):.3e}  "
+     f"p5={np.percentile(tangent_norms_pre, 5):.3e}  "
      f"min={tangent_norms_pre.min():.3e}")
 
 pre_jump_angles, post_jump_angles = [], []
@@ -155,6 +184,48 @@ def _angle_summary(lbl, arr):
 
 _angle_summary("pre-jump  (arc -> bridge)", pre_jump_angles)
 _angle_summary("post-jump (bridge -> arc)", post_jump_angles)
+
+# ---------------- 4. Bridge-to-bridge separation under David's DynamicDistance ----------------
+_log("")
+_log("[4] Bridge-to-bridge separation under David's DynamicDistance")
+_log("    metric: max(||p-q||, C*||v-w||) with C = boxsize * sb_radius")
+
+bridge_rows, arc_rows = {}, {}
+for k, t in enumerate(tags):
+    (bridge_rows if t[0] == "bridge" else arc_rows).setdefault(t[1], []).append(k)
+bridge_rows = {k: np.array(v) for k, v in bridge_rows.items()}
+arc_rows = {k: np.array(v) for k, v in arc_rows.items()}
+
+def dyn_dist(A_pos, A_tan, B_pos, B_tan, C):
+    dpos = np.linalg.norm(A_pos[:, None, :] - B_pos[None, :, :], axis=-1)
+    dtan = np.linalg.norm(A_tan[:, None, :] - B_tan[None, :, :], axis=-1)
+    return np.maximum(dpos, C * dtan)
+
+for C in (0.05, 0.2, 0.5, 1.0):
+    inter_min = np.inf
+    for i in bridge_rows:
+        for j in bridge_rows:
+            if i >= j:
+                continue
+            Zi, Ti = Z[bridge_rows[i]], tx[bridge_rows[i]]
+            Zj, Tj = Z[bridge_rows[j]], tx[bridge_rows[j]]
+            d = dyn_dist(Zi, Ti, Zj, Tj, C).min()
+            if d < inter_min:
+                inter_min = d
+    arc_steps = []
+    for j, rows in arc_rows.items():
+        if len(rows) < 2:
+            continue
+        Zs, Ts = Z[rows], tx[rows]
+        dpos_steps = np.linalg.norm(np.diff(Zs, axis=0), axis=1)
+        dtan_steps = np.linalg.norm(np.diff(Ts, axis=0), axis=1)
+        arc_steps.extend(np.maximum(dpos_steps, C * dtan_steps).tolist())
+    arc_steps = np.array(arc_steps)
+    rho = inter_min / np.median(arc_steps)
+    _log(
+        f"  C={C:>4.2f}:  inter_bridge_min={inter_min:.3e}  "
+        f"arc_step_median={np.median(arc_steps):.3e}  rho={rho:.2f}"
+    )
 
 report_path = os.path.join(DATA_DIR, f"report{args.suffix}_encoder_diagnostics.txt")
 with open(report_path, "w", encoding="utf-8") as f:

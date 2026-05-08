@@ -7,13 +7,31 @@ embed_dim: 9
 trajectory: 5 arcs, 5 jumps, n_s=50
 lift shape: (1000, 9)
 
-[1] Reconstruction D(E(.)) vs input
+[1] Reconstruction D(E(.)) vs input  (injectivity witness on sampled data)
   full err (arcs, s=0)      mean=5.967e-02  median=4.817e-02  p95=1.323e-01  max=1.699e-01
   full err (bridges)        mean=1.716e-01  median=5.678e-02  p95=6.650e-01  max=2.543e+00
   state err (arcs)          mean=5.863e-02  median=4.681e-02  p95=1.322e-01  max=1.698e-01
   state err (bridges)       mean=1.637e-01  median=5.163e-02  p95=6.633e-01  max=2.350e+00
 
-[2] Finite-difference tangent quality
-  pre-normalize norm: median=1.587e-02  min=3.120e-03
+[2] Latent near-collisions from time-distant samples (collapse screen)
+  min time-distant latent distance:  1.379e-02
+  median time-distant latent/input ratio: 0.290
+  p5 ratio:                          0.094  (low = potential collapse)
+  pairs with ratio < 0.25 AND input_dist > 0.1: 323/1000
+    sample 0 ('arc', 0) <-> 606 ('arc', 3): d_lat=6.61e-02  d_inp=3.82e-01  ratio=0.17
+    sample 1 ('arc', 0) <-> 606 ('arc', 3): d_lat=6.61e-02  d_inp=3.56e-01  ratio=0.19
+    sample 2 ('arc', 0) <-> 607 ('arc', 3): d_lat=6.64e-02  d_inp=3.55e-01  ratio=0.19
+    sample 3 ('arc', 0) <-> 607 ('arc', 3): d_lat=6.65e-02  d_inp=2.95e-01  ratio=0.23
+    sample 4 ('arc', 0) <-> 608 ('arc', 3): d_lat=6.64e-02  d_inp=2.93e-01  ratio=0.23
+
+[3] Finite-difference tangent quality
+  pre-normalize norm: median=1.587e-02  p5=9.917e-03  min=3.120e-03
   pre-jump  (arc -> bridge): median=6.8 deg  max=14.1 deg  (n=5)
   post-jump (bridge -> arc): median=80.9 deg  max=84.6 deg  (n=4)
+
+[4] Bridge-to-bridge separation under David's DynamicDistance
+    metric: max(||p-q||, C*||v-w||) with C = boxsize * sb_radius
+  C=0.05:  inter_bridge_min=1.517e-02  arc_step_median=1.442e-02  rho=1.05
+  C=0.20:  inter_bridge_min=1.517e-02  arc_step_median=1.568e-02  rho=0.97
+  C=0.50:  inter_bridge_min=1.517e-02  arc_step_median=2.604e-02  rho=0.58
+  C=1.00:  inter_bridge_min=1.517e-02  arc_step_median=4.723e-02  rho=0.32

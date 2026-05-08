@@ -7,10 +7,10 @@ trajectory: 5 arcs, 5 jumps, n_s=50
 lift shape: (1000, 5)  (samples, latent_dim)
 
 [1] Reconstruction D(E(.)) vs input  (injectivity witness on sampled data)
-  full err (arcs, s=0)      mean=1.014e+01  median=6.215e+00  p95=3.135e+01  max=3.433e+01
-  full err (bridges)        mean=1.134e+01  median=1.131e+01  p95=2.035e+01  max=2.279e+01
-  state err (arcs)          mean=1.012e+01  median=6.171e+00  p95=3.135e+01  max=3.433e+01
-  state err (bridges)       mean=1.125e+01  median=1.126e+01  p95=2.023e+01  max=2.262e+01
+  full err (arcs, s=0)      mean=1.384e-01  median=7.514e-02  p95=6.286e-01  max=9.961e-01
+  full err (bridges)        mean=1.675e-01  median=8.727e-02  p95=8.804e-01  max=1.915e+00
+  state err (arcs)          mean=1.294e-01  median=6.797e-02  p95=6.064e-01  max=9.766e-01
+  state err (bridges)       mean=1.597e-01  median=8.553e-02  p95=7.311e-01  max=1.915e+00
   note: the decoder now reconstructs s freely (no forcing); bridge
         samples near s=0 or s=1 are masked during Phase II training
         (manuscript Section 4) so some residual near boundaries is expected.

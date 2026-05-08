@@ -137,7 +137,9 @@ _log(f"lift shape: {Z.shape}  (samples, latent_dim)")
 _log("")
 _log("[1] Reconstruction D(E(.)) vs input  (injectivity witness on sampled data)")
 with torch.no_grad():
-    x_rec = D_dec(torch.tensor(X_in, dtype=torch.float32)).numpy()
+    # Proper round-trip: D(E(x)). In an earlier version this was written as
+    # D_dec(X_in) directly; that only happened to work when embed_dim == n+1.
+    x_rec = D_dec(torch.as_tensor(Z, dtype=torch.float32)).numpy()
 
 arc_mask = np.array([t[0] == "arc" for t in tags])
 br_mask = ~arc_mask
