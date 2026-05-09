@@ -1,0 +1,23 @@
+Rimless-wheel decoded-rollout evaluation
+================================================
+model:  C:\Users\roger\OneDrive - Umich\Kaito Iwasaki\The Vault\Research\2026\HybridCyclingSignatures\runs\rimless_wheel\model.pt
+IC:     [-0.21586245  0.54481143]
+arcs:   8  jumps: 8
+samples: 1539  (arc: 1139, bridge: 400)
+
+[D(E(x)) round-trip]
+  state err  mean=5.484e-03  median=2.604e-03  p95=1.129e-02  max=3.356e-01
+  s err      mean=4.545e-03  max=3.690e-01
+  arc-only state err   mean=3.645e-03  max=3.705e-02
+  bridge state err     mean=1.072e-02  max=3.356e-01
+
+[Semiflow one-step D(F(E(x_i))) vs x_{i+1}]
+  state err  mean=2.909e-02  median=2.208e-02  p95=8.166e-02  max=3.669e-01
+
+[Semiflow long-horizon rollout D(F^k(E(x0)))]
+  state err  mean=2.801e-01  median=7.404e-01  p95=6.048e-01
+  state err at step 10: 1.147e-01
+  state err at step 25: 5.604e-01
+  state err at step 50: 4.535e-01
+  state err at step 100: 2.412e-01
+  state err at step 200: 6.614e-01
