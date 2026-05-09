@@ -1,0 +1,29 @@
+# Cycling-signature H_1 births (data_dir=C:\Users\roger\OneDrive - Umich\Kaito Iwasaki\The Vault\Research\2026\HybridCyclingSignatures\data/rimless_wheel, base_name=continuous_lift_relaxed_seam1v2_seamonly)
+# full grid of (boxsize, sb_radius, C=boxsize*sb_radius, beta_1(Y), rank, n_births, max_birth) shown below,
+# followed by the explicit birth vector at the canonical cell.
+#
+# boxsize,sb_radius,C,beta_1,rank,n_births,max_birth
+# 0.3,1,0.3,1,1,1,0.0
+# 0.2,1,0.2,1,1,1,0.0
+# 0.1,1,0.1,1,1,1,0.0
+# 0.05,1,0.05,1,1,1,0.0
+# 0.02,1,0.02,1,1,1,0.0
+# 0.01,1,0.01,1,1,1,0.0
+# 0.3,2,0.6,1,1,1,0.0
+# 0.2,2,0.4,1,1,1,0.0
+# 0.1,2,0.2,1,1,1,0.0
+# 0.05,2,0.1,1,1,1,0.0
+# 0.02,2,0.04,1,1,1,0.0
+# 0.01,2,0.02,1,1,1,0.0
+# 0.3,4,1.2,1,1,1,0.0
+# 0.2,4,0.8,1,1,1,0.0
+# 0.1,4,0.4,1,1,1,0.0
+# 0.05,4,0.2,1,1,1,0.0
+# 0.02,4,0.08,1,1,1,0.0
+# 0.01,4,0.04,1,1,1,0.0
+#
+# Canonical cell (first (boxsize, sb_radius) with beta_1>0 and rank>0):
+# boxsize=0.3, sb_radius=1
+#
+bar_index,birth
+1,0.0

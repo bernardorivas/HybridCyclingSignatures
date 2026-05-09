@@ -1,0 +1,23 @@
+Rimless-wheel decoded-rollout evaluation
+================================================
+model:  runs\rimless_wheel\model_seam1v2_noconf.pt
+IC:     [-0.21586245  0.54481143]
+arcs:   8  jumps: 8
+samples: 1539  (arc: 1139, bridge: 400)
+
+[D(E(x)) round-trip]
+  state err  mean=1.063e-02  median=5.198e-03  p95=1.959e-02  max=4.809e-01
+  s err      mean=1.022e-02  max=5.751e-01
+  arc-only state err   mean=7.419e-03  max=4.809e-01
+  bridge state err     mean=1.979e-02  max=4.778e-01
+
+[Semiflow one-step D(F(E(x_i))) vs x_{i+1}]
+  state err  mean=2.884e-02  median=2.635e-02  p95=4.845e-02  max=6.150e-01
+
+[Semiflow long-horizon rollout D(F^k(E(x0)))]
+  state err  mean=3.950e-01  median=1.110e+00  p95=8.317e-01
+  state err at step 10: 1.336e-01
+  state err at step 25: 4.984e-01
+  state err at step 50: 4.475e-01
+  state err at step 100: 2.550e-01
+  state err at step 200: 7.617e-01
