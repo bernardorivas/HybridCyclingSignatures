@@ -114,6 +114,50 @@ def compute_collapse_loss(model, x, cfg):
     return F.relu(cfg.collapse_threshold - var).sum()
 
 
+def compute_seam_loss(model, sys, cfg):
+    """L_seam: cosine mismatch between the bridge-end tangent direction and the
+    next arc-start tangent direction at the same latent point.
+
+    Bridge-end tangent is the s-direction velocity v_cyl(g, 1); arc-start
+    tangent at the next arc is grad_x E(r(g), 0) . v_X(r(g)) (the encoder
+    Jacobian applied to the post-reset physical velocity). L_utb already
+    anchors v_cyl(g, 1) to v_X(r(g)) padded, but does not constrain
+    grad_x E, so the two tangent DIRECTIONS in latent space typically
+    disagree (the post-jump cusp). This loss directly closes that gap.
+
+    Defined as `1 - cos(angle)` over sampled guard states; small means
+    the two unit tangents agree.
+    """
+    device = next(model.parameters()).device
+    n = cfg.state_dim
+    h = cfg.utb_finite_diff_h
+    num_samples = cfg.utb_num_samples
+
+    g_states = _sample_guard_states(cfg, num_samples)
+    r_states = np.array([sys.reset_map(g) for g in g_states])
+    v_rg = np.array([sys.base_vector_field(0, rg) for rg in r_states])
+
+    # Bridge-end tangent in latent: finite-difference s-direction at s=1.
+    g_t = torch.as_tensor(g_states, dtype=torch.float32, device=device)
+    x_g_1   = torch.cat([g_t, torch.ones(num_samples, 1, device=device)], dim=-1)
+    x_g_1mh = torch.cat([g_t, torch.full((num_samples, 1), 1.0 - h, device=device)], dim=-1)
+    v_bridge = (model.E(x_g_1) - model.E(x_g_1mh)) / h          # (B, d)
+
+    # Arc-start tangent in latent: JVP of E at (r(g), 0) in direction (v_X(r(g)), 0).
+    r_t = torch.as_tensor(r_states, dtype=torch.float32, device=device)
+    v_t = torch.as_tensor(v_rg,    dtype=torch.float32, device=device)
+    x_at = torch.cat([r_t, torch.zeros(num_samples, 1, device=device)], dim=-1)
+    dir_ = torch.cat([v_t, torch.zeros(num_samples, 1, device=device)], dim=-1)
+    _, v_arc = torch.func.jvp(model.E, (x_at,), (dir_,))         # (B, d)
+
+    # Cosine-distance loss on direction only.
+    eps = 1e-8
+    u_b = v_bridge / (v_bridge.norm(dim=-1, keepdim=True) + eps)
+    u_a = v_arc    / (v_arc.norm(dim=-1, keepdim=True)    + eps)
+    cos = (u_b * u_a).sum(dim=-1)                                # (B,)
+    return (1.0 - cos).mean()
+
+
 def compute_utb_loss(model, sys, cfg):
     """L_utb anchors the cylinder-direction velocity v_cyl(g, s) = ∂_s E(g, s)
     to the physical velocity at s=0 and s=1.
@@ -171,7 +215,7 @@ def calculate_composite_losses(model, sys, x_i, x_next, cfg, phase=1):
         total = cfg.weight_recon * loss_recon
         return total, {'recon': loss_recon.item(), 'total': total.item()}
 
-    # --- Phase I: five terms, no recon ---
+    # --- Phase I: five-or-six terms, no recon ---
     loss_dyn  = compute_dynamics_loss(model, x_i, x_next, cfg)
     loss_glue = compute_gluing_loss(model, sys, cfg)
     loss_conf = compute_conformal_loss(model, x_i, cfg)
@@ -192,6 +236,14 @@ def calculate_composite_losses(model, sys, x_i, x_next, cfg, phase=1):
         'conf':  loss_conf.item(),
         'coll':  loss_coll.item(),
         'utb':   loss_utb.item(),
-        'total': total.item(),
     }
+
+    # Optional L_seam: cosine mismatch of bridge-end vs next arc-start tangents.
+    # Off by default (weight_seam=0); turn on to close the post-jump cusp.
+    if getattr(cfg, 'weight_seam', 0.0) > 0.0:
+        loss_seam = compute_seam_loss(model, sys, cfg)
+        total = total + cfg.weight_seam * loss_seam
+        metrics['seam'] = loss_seam.item()
+
+    metrics['total'] = total.item()
     return total, metrics

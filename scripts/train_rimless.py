@@ -47,6 +47,8 @@ def _parse_args():
                    help="Weight on the conformal Jacobian penalty in Phase I.")
     p.add_argument("--weight-utb", type=float, default=config.weight_utb,
                    help="Weight on the L_utb tangent-anchoring penalty.")
+    p.add_argument("--weight-seam", type=float, default=config.weight_seam,
+                   help="Weight on the L_seam cosine cusp-closing penalty (0 = off).")
     p.add_argument("--embed-extra", type=int, default=config.embed_extra,
                    help="Extra latent dims beyond n+1; sets embed_dim = n+1+embed_extra.")
     p.add_argument("--out-suffix", default="",
@@ -103,7 +105,10 @@ def train_rimless_wheel(out_suffix=""):
     )
     sched1 = optim.lr_scheduler.CosineAnnealingLR(opt_phase1, T_max=config.phase1_epochs)
 
-    phase1_history = {k: [] for k in ('dyn', 'glue', 'conf', 'coll', 'utb', 'total')}
+    phase1_keys = ['dyn', 'glue', 'conf', 'coll', 'utb', 'total']
+    if config.weight_seam > 0:
+        phase1_keys.insert(-1, 'seam')
+    phase1_history = {k: [] for k in phase1_keys}
 
     for epoch in range(config.phase1_epochs):
         model.train()
@@ -128,9 +133,11 @@ def train_rimless_wheel(out_suffix=""):
 
         if (epoch + 1) == 1 or (epoch + 1) % 10 == 0:
             h = {k: phase1_history[k][-1] for k in phase1_history}
+            extra = f"  seam={h['seam']:.4f}" if 'seam' in h else ""
             print(f"  [P1] Epoch {epoch+1:3d}/{config.phase1_epochs}  "
                   f"total={h['total']:.4f}  dyn={h['dyn']:.4f}  glue={h['glue']:.4f}  "
-                  f"conf={h['conf']:.2e}  coll={h['coll']:.4f}  utb={h['utb']:.4f}")
+                  f"conf={h['conf']:.2e}  coll={h['coll']:.4f}  utb={h['utb']:.4f}"
+                  f"{extra}")
 
     # Freeze E and F
     for p in model.E.parameters(): p.requires_grad = False
@@ -211,5 +218,6 @@ if __name__ == '__main__':
     args = _parse_args()
     config.weight_conf = args.weight_conf
     config.weight_utb = args.weight_utb
+    config.weight_seam = args.weight_seam
     config.embed_extra = args.embed_extra
     train_rimless_wheel(out_suffix=args.out_suffix)
