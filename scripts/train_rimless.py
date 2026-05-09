@@ -45,8 +45,12 @@ def _parse_args():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--weight-conf", type=float, default=config.weight_conf,
                    help="Weight on the conformal Jacobian penalty in Phase I.")
+    p.add_argument("--weight-utb", type=float, default=config.weight_utb,
+                   help="Weight on the L_utb tangent-anchoring penalty.")
+    p.add_argument("--embed-extra", type=int, default=config.embed_extra,
+                   help="Extra latent dims beyond n+1; sets embed_dim = n+1+embed_extra.")
     p.add_argument("--out-suffix", default="",
-                   help="Suffix for output files (e.g. '_noconf'); produces "
+                   help="Suffix for output files (e.g. '_embed7'); produces "
                         "model{suffix}.pt and fig_rimless_optimization_losses{suffix}.png.")
     return p.parse_args()
 
@@ -65,7 +69,8 @@ def train_rimless_wheel(out_suffix=""):
     print(f"  state_dim={config.state_dim}, embed_dim={config.embed_dim}")
     print(f"  alpha={config.alpha}, gamma={config.gamma}, "
           f"theta_guard={config.theta_guard:.3f}, theta_reset={config.theta_reset:.3f}")
-    print(f"  weight_conf={config.weight_conf}, out_suffix={out_suffix!r}")
+    print(f"  weight_conf={config.weight_conf}, weight_utb={config.weight_utb}, "
+          f"embed_extra={config.embed_extra}, out_suffix={out_suffix!r}")
 
     device = _resolve_device()
     print(f"  device={device}\n")
@@ -205,4 +210,6 @@ def train_rimless_wheel(out_suffix=""):
 if __name__ == '__main__':
     args = _parse_args()
     config.weight_conf = args.weight_conf
+    config.weight_utb = args.weight_utb
+    config.embed_extra = args.embed_extra
     train_rimless_wheel(out_suffix=args.out_suffix)

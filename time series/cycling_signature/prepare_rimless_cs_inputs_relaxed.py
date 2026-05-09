@@ -55,7 +55,13 @@ parser.add_argument(
     "--ic", nargs=2, type=float, default=None,
     help="Override IC (theta0 omega0). Defaults to the limit-cycle IC.",
 )
+parser.add_argument(
+    "--embed-extra", type=int, default=config.embed_extra,
+    help="Set config.embed_extra before instantiating networks; must match "
+         "what the model was trained with.",
+)
 args = parser.parse_args()
+config.embed_extra = args.embed_extra
 
 # ---------------- Model ----------------
 net = SuspensionNetworks()

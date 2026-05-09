@@ -48,6 +48,9 @@ def _parse_args():
                    help="Path to trained model.pt.")
     p.add_argument("--out-suffix", default="",
                    help="Suffix appended to output figure / report names.")
+    p.add_argument("--embed-extra", type=int, default=config.embed_extra,
+                   help="Set config.embed_extra before instantiating networks; "
+                        "must match what the model was trained with.")
     return p.parse_args()
 
 # Limit-cycle post-reset state for alpha=0.4, gamma=0.2:
@@ -79,12 +82,13 @@ def main():
     args = _parse_args()
     model_path = args.model
     suffix = args.out_suffix
+    config.embed_extra = args.embed_extra
 
     if not model_path.exists():
         print(f"ERROR: missing {model_path}. Train first.")
         sys.exit(1)
 
-    print(f"Loading {model_path}")
+    print(f"Loading {model_path}  (embed_dim={config.embed_dim})")
     net = SuspensionNetworks()
     net.load_state_dict(torch.load(model_path, map_location="cpu", weights_only=True))
     net.eval()
