@@ -1,0 +1,12 @@
+Rimless-wheel off-limit-cycle decoded-rollout evaluation
+========================================================
+model: C:\Users\roger\OneDrive - Umich\Kaito Iwasaki\The Vault\Research\2026\HybridCyclingSignatures\runs\rimless_wheel\model.pt
+n_impacts per IC: 6
+
+name                 IC                          arcs  arc_err mean   arc_err max  bridge_err max
+LC_post_reset        [-0.2   0.54]                  6      3.577e-03     1.402e-02       3.356e-01
+low_omega            [-0.2  0.3]                    6      4.870e-03     4.027e-02       3.354e-01
+fast_post_reset      [-0.2  1.2]                    6      3.174e-03     2.458e-02       3.409e-01
+mid_arc_slow         [0.1  0.45]                    6      3.505e-03     1.469e-02       3.355e-01
+mid_arc_fast         [0.1 1.5]                      6      3.062e-03     2.531e-02       3.409e-01
+near_guard           [0.5 0.8]                      6      3.439e-03     1.608e-02       3.397e-01
