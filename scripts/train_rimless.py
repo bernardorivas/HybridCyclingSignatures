@@ -196,6 +196,9 @@ def train_rimless_wheel(out_suffix=""):
     ax1.semilogy(ep1, phase1_history['conf'],  color=OKABE_ITO[2], lw=1.2, label=r'$\mathcal{L}_{\mathrm{conf}}$')
     ax1.semilogy(ep1, phase1_history['coll'],  color=OKABE_ITO[3], lw=1.2, label=r'$\mathcal{L}_{\mathrm{coll}}$')
     ax1.semilogy(ep1, phase1_history['utb'],   color=OKABE_ITO[4], lw=1.2, label=r'$\mathcal{L}_{\mathrm{utb}}$')
+    if 'seam' in phase1_history:
+        ax1.semilogy(ep1, phase1_history['seam'], color=OKABE_ITO[6], lw=1.2,
+                     label=r'$\mathcal{L}_{\mathrm{seam}}$')
     ax1.set_xlabel('Epoch'); ax1.set_ylabel('Loss (MSE)')
     ax1.set_title('Phase I: encoder + semiflow')
     ax1.legend(fontsize=8, ncol=2)
