@@ -1,17 +1,21 @@
 #!/usr/bin/env julia
 #
-# Cycling-signature computation on the compass-gait analytic lift.
+# Cycling-signature computation on an encoded lift.
 #
-# Inputs (from data/compass_gait/):
-#   continuous_lift_analytic*_positions.csv  (T rows x d columns)
-#   continuous_lift_analytic*_tangents.csv   (T rows x d columns)
+# Inputs:
+#   {data_dir}/{base}{suffix}_positions.csv  (T rows x d columns)
+#   {data_dir}/{base}{suffix}_tangents.csv   (T rows x d columns)
 #
 # Output:
-#   data/compass_gait/barcode_H1_analytic*.csv  (bar index, birth, [death])
+#   {data_dir}/barcode_H1_{...}.csv          (full sweep + canonical-cell birth vector)
+#
+# Defaults: data_dir = data/compass_gait, base = continuous_lift_analytic.
 #
 # Usage:
 #   julia --project="time series/cycling_signature" "time series/cycling_signature/run_cycling_signature.jl"
 #   julia --project="time series/cycling_signature" "time series/cycling_signature/run_cycling_signature.jl" --suffix _eta2
+#   julia --project="time series/cycling_signature" "time series/cycling_signature/run_cycling_signature.jl" \
+#       --data-dir data/rimless_wheel --base continuous_lift_relaxed
 
 import Pkg
 Pkg.activate(@__DIR__)
@@ -35,6 +39,7 @@ using LinearAlgebra
 function parse_args_cli(args)
     suffix = ""
     base = "continuous_lift_analytic"
+    data_dir = joinpath(REPO_ROOT, "data", "compass_gait")
     i = 1
     while i <= length(args)
         arg = args[i]
@@ -46,16 +51,21 @@ function parse_args_cli(args)
             i == length(args) && error("--base requires a value")
             base = args[i + 1]
             i += 2
+        elseif arg == "--data-dir"
+            i == length(args) && error("--data-dir requires a value")
+            data_dir = args[i + 1]
+            isabspath(data_dir) || (data_dir = joinpath(REPO_ROOT, data_dir))
+            i += 2
         else
             error("Unknown argument: $arg")
         end
     end
-    return suffix, base
+    return suffix, base, data_dir
 end
 
-suffix, base_prefix = parse_args_cli(ARGS)
-DATA_DIR = joinpath(REPO_ROOT, "data", "compass_gait")
+suffix, base_prefix, DATA_DIR = parse_args_cli(ARGS)
 base_name = base_prefix * suffix
+println("data_dir: $DATA_DIR")
 pos_csv = joinpath(DATA_DIR, base_name * "_positions.csv")
 tan_csv = joinpath(DATA_DIR, base_name * "_tangents.csv")
 
@@ -65,7 +75,7 @@ TX_rows = readdlm(tan_csv, ' ', Float64)
 X  = Matrix(transpose(X_rows))    # (d, N)
 TX = Matrix(transpose(TX_rows))   # (d, N)
 d, N = size(X)
-println("Loaded compass lift: dim=$d, samples=$N")
+println("Loaded lift: dim=$d, samples=$N (base=$base_name)")
 
 # Renormalize tangents to unit length in Julia: the CSV roundtrip can drop a
 # few ULPs, and David's `utb_trajectory_space_from_trajectory` enforces
@@ -87,11 +97,13 @@ end
 
 # Parameter sweep: the first run at boxsize=0.2 gave beta_1(Y)=0 (simply
 # connected cover), so scan a range of (boxsize, sb_radius) pairs to locate
-# the regime where the comparison space captures the orbit's loop.
+# the regime where the comparison space captures the orbit's loop. Range
+# extended toward smaller scales for thin-loop embeddings (e.g. rimless,
+# whose latent loop has very small extent in one coordinate).
 param_grid = [
-    (0.30, 1), (0.20, 1), (0.10, 1), (0.05, 1),
-    (0.30, 2), (0.20, 2), (0.10, 2), (0.05, 2),
-    (0.30, 4), (0.20, 4), (0.10, 4), (0.05, 4),
+    (0.30, 1), (0.20, 1), (0.10, 1), (0.05, 1), (0.02, 1), (0.01, 1),
+    (0.30, 2), (0.20, 2), (0.10, 2), (0.05, 2), (0.02, 2), (0.01, 2),
+    (0.30, 4), (0.20, 4), (0.10, 4), (0.05, 4), (0.02, 4), (0.01, 4),
 ]
 
 results = Vector{NamedTuple}()
@@ -145,7 +157,7 @@ births_final = sig_final.birth_vector
 barcode_stem = replace(base_name, "continuous_lift_" => "barcode_H1_")
 barcode_csv = joinpath(DATA_DIR, barcode_stem * ".csv")
 open(barcode_csv, "w") do io
-    println(io, "# Cycling-signature H_1 births on compass lift (base_name=$(base_name))")
+    println(io, "# Cycling-signature H_1 births (data_dir=$(DATA_DIR), base_name=$(base_name))")
     println(io, "# full grid of (boxsize, sb_radius, C=boxsize*sb_radius, beta_1(Y), rank, n_births, max_birth) shown below,")
     println(io, "# followed by the explicit birth vector at the canonical cell.")
     println(io, "#")

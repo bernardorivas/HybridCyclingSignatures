@@ -1,0 +1,37 @@
+
+============================================================
+PHASE A  |  RELAXED-SPACE ENCODER DIAGNOSTICS (rimless)
+============================================================
+model: C:\Users\roger\OneDrive - Umich\Kaito Iwasaki\The Vault\Research\2026\HybridCyclingSignatures\runs\rimless_wheel\model.pt
+trajectory: 20 arcs, 20 jumps, n_s=50
+lift shape: (3840, 3)  (samples, latent_dim)
+
+[1] Reconstruction D(E(.)) vs input  (injectivity witness on sampled data)
+  full err (arcs, s=0)      mean=4.476e-03  median=3.900e-03  p95=1.177e-02  max=1.701e-02
+  full err (bridges)        mean=1.553e-02  median=2.678e-03  p95=1.748e-02  max=4.988e-01
+  state err (arcs)          mean=3.577e-03  median=2.802e-03  p95=1.111e-02  max=1.403e-02
+  state err (bridges)       mean=1.072e-02  median=1.784e-03  p95=1.577e-02  max=3.356e-01
+  note: the decoder reconstructs s freely (no forcing); bridge
+        samples near s=0 or s=1 are masked during Phase II training
+        (manuscript Section 4) so some residual near boundaries is expected.
+
+[2] Latent near-collisions from time-distant samples (collapse screen)
+  min time-distant latent distance:  0.000e+00
+  median time-distant latent/input ratio: 0.767
+  p5 ratio:                          0.000  (low = potential collapse)
+  pairs with ratio < 0.25 AND input_dist > 0.1: 0/3840
+
+[3] Finite-difference tangent quality
+  pre-normalize norm: median=4.514e-03  p5=2.708e-03  min=2.088e-03
+  samples with pre-norm < 1e-6: 0 (unit-normalization yields direction from noise at these points)
+  pre-jump  (arc -> bridge): median=0.3 deg  max=0.3 deg  (n=20)
+  post-jump (bridge -> arc): median=76.2 deg  max=76.2 deg  (n=19)
+
+[4] Bridge-to-bridge separation under DynamicDistance
+    metric: max(||p-q||, C*||v-w||) with C = boxsize * sb_radius
+  C=0.05:  inter_bridge_min=0.000e+00  arc_step_median=3.488e-03  rho=0.00
+  C=0.20:  inter_bridge_min=0.000e+00  arc_step_median=3.635e-03  rho=0.00
+  C=0.50:  inter_bridge_min=0.000e+00  arc_step_median=6.693e-03  rho=0.00
+  C=1.00:  inter_bridge_min=0.000e+00  arc_step_median=1.339e-02  rho=0.00
+  note: rimless bridges are observations of the same canonical jump
+        (the wheel-spoke impact); low inter-bridge distance is expected.
