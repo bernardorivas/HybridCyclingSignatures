@@ -15,8 +15,8 @@ from the compass pipeline yet.
 | Stage | Status |
 |-------|--------|
 | 1. Train relaxed-space encoder       | **live** (`scripts/train_rimless.py`) |
-| 2. Decoded-rollout evaluation        | **live** (`scripts/evaluate_decoded_rollout_rimless.py`) |
-| 3. Encoded-lift export + diagnostics | **TODO** — port `time series/cycling_signature/prepare_compass_cs_inputs_relaxed.py` |
+| 2. Decoded-rollout evaluation        | **live** (`scripts/evaluate_decoded_rollout_rimless.py`, plus `_basin.py` for off-LC ICs) |
+| 3. Encoded-lift export + diagnostics | **live** (`time series/cycling_signature/prepare_rimless_cs_inputs_relaxed.py`) |
 | 4. Julia cycling signature           | reusable as-is (script is system-agnostic) |
 | 5. Heatmap figure                    | **TODO** — adapt `plot_compass_rank_heatmap.py` |
 

@@ -21,10 +21,11 @@ python scripts/train_rimless.py
 echo
 echo "=== [2/5] Evaluate decoded rollout vs ground truth ==="
 python scripts/evaluate_decoded_rollout_rimless.py
+python scripts/evaluate_decoded_rollout_rimless_basin.py
 
 echo
-echo "=== [3/5] Export encoded lifts -- TODO ==="
-echo "    Write time series/cycling_signature/prepare_rimless_cs_inputs_relaxed.py."
+echo "=== [3/5] Export encoded lift + Phase-A diagnostics ==="
+python "time series/cycling_signature/prepare_rimless_cs_inputs_relaxed.py"
 
 echo
 echo "=== [4/5] Cycling signature in Julia -- ready when stage 3 lands ==="

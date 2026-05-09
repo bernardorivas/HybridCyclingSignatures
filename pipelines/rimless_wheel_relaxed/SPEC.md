@@ -94,22 +94,45 @@ term:
 |----------|--------|-------------------------------------------------------|
 | `L_recon`| 1.0    | `MSE(D(E(x)), x)` on samples with `s = 0` or `ε < s < 1-ε`, `ε = 0.05` |
 
-## 4. Lift export for cycling signature — **TODO**
+## 4. Lift export for cycling signature (`time series/cycling_signature/prepare_rimless_cs_inputs_relaxed.py`)
 
-A rimless analogue of
-`time series/cycling_signature/prepare_compass_cs_inputs_relaxed.py` does
-not exist yet. Once written it should:
+### Canonical rollout
 
-1. Load `runs/rimless_wheel/model.pt`.
-2. Simulate the canonical rimless limit-cycle rollout via
-   `time series/rimless wheel/simulate.py` (verify this script exposes a
-   `simulate_rimless` returning `segments` and `jump_pairs` matching the
-   compass interface; if not, write a thin wrapper).
-3. Encode arcs (at `s = 0`) and bridges (50 interior `s ∈ (0, 1)` samples
-   per impact) through the trained encoder.
-4. Write `.npy` / `.csv` artifacts and a Phase-A diagnostics report
-   (reconstruction, collapse screen, tangent quality, inter-bridge
-   separation under DynamicDistance).
+`time series/rimless wheel/simulate.py` — `simulate_rimless_wheel(theta0,
+omega0, n_impacts)`. Default canonical IC is the limit-cycle post-reset
+state `(theta, omega) = (-0.2, 0.54)` for `alpha=0.4, gamma=0.2`; override
+with `--ic theta0 omega0`. Returns `(segments, jump_pairs)` matching the
+compass interface.
+
+### Bridge parameterisation
+
+Each bridge is `n_s = 50` interior samples of the line `{(x_minus, s) : s
+in (0, 1)}` passed through `E_theta`. No runtime closure enforcement;
+closure is whatever the trained encoder produces via the gluing loss.
+
+### Tangents
+
+First differences `dz / ||dz||` with the last row duplicated. Unit-norm
+assertion at `atol = 1e-6`.
+
+### Diagnostics report
+
+Phase-A diagnostics written to
+`data/rimless_wheel/report_relaxed_encoder_diagnostics.txt`. Same four
+sections as the compass version:
+
+1. Reconstruction error `||D(E(x)) - x||` split by arc / bridge.
+2. Near-collision screen using time-distant pairs.
+3. Tangent quality (pre-normalize norms, junction angles).
+4. Bridge-to-bridge separation under DynamicDistance for
+   `C in {0.05, 0.2, 0.5, 1.0}`.
+
+A note on rimless bridges: there is only one canonical impact in the
+rimless system (one spoke striking the ground), so all bridges in a
+canonical rollout are observations of the *same* jump. Inter-bridge
+distance therefore measures stability of the encoder's bridge image
+across repeated visits, not topological separation. Compare to the
+compass case where bridges are distinct in time-of-flight phase.
 
 ## 5. Julia cycling signature
 

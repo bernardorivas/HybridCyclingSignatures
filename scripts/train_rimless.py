@@ -10,6 +10,7 @@ Phase II  — freeze E and F, train D alone on masked L_recon with larger LR.
 Saves model weights to runs/rimless_wheel/model.pt and per-term loss history
 plot to figures/rimless_wheel/fig_rimless_optimization_losses.png.
 """
+import argparse
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -40,6 +41,16 @@ config.phase2_epochs = 150
 config.weight_conf = 0.0001
 
 
+def _parse_args():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--weight-conf", type=float, default=config.weight_conf,
+                   help="Weight on the conformal Jacobian penalty in Phase I.")
+    p.add_argument("--out-suffix", default="",
+                   help="Suffix for output files (e.g. '_noconf'); produces "
+                        "model{suffix}.pt and fig_rimless_optimization_losses{suffix}.png.")
+    return p.parse_args()
+
+
 def _resolve_device():
     if config.device == "mps" and torch.backends.mps.is_available():
         return torch.device("mps")
@@ -48,12 +59,13 @@ def _resolve_device():
     return torch.device("cpu")
 
 
-def train_rimless_wheel():
+def train_rimless_wheel(out_suffix=""):
     matplotlib.rcParams.update(PUB_STYLE)
     print("Rimless-wheel relaxed-space training (Section 4 pipeline)")
     print(f"  state_dim={config.state_dim}, embed_dim={config.embed_dim}")
     print(f"  alpha={config.alpha}, gamma={config.gamma}, "
           f"theta_guard={config.theta_guard:.3f}, theta_reset={config.theta_reset:.3f}")
+    print(f"  weight_conf={config.weight_conf}, out_suffix={out_suffix!r}")
 
     device = _resolve_device()
     print(f"  device={device}\n")
@@ -156,7 +168,7 @@ def train_rimless_wheel():
     # 3. Save model
     out_dir = ROOT / "runs" / "rimless_wheel"
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / "model.pt"
+    out_path = out_dir / f"model{out_suffix}.pt"
     torch.save(model.state_dict(), out_path)
     print(f"\nModel saved to {out_path}")
 
@@ -184,11 +196,13 @@ def train_rimless_wheel():
     ax2.legend(fontsize=8)
 
     fig.tight_layout()
-    fig_path = fig_dir / "fig_rimless_optimization_losses.png"
+    fig_path = fig_dir / f"fig_rimless_optimization_losses{out_suffix}.png"
     fig.savefig(fig_path, dpi=200)
     plt.close(fig)
     print(f"Loss figure saved to {fig_path}")
 
 
 if __name__ == '__main__':
-    train_rimless_wheel()
+    args = _parse_args()
+    config.weight_conf = args.weight_conf
+    train_rimless_wheel(out_suffix=args.out_suffix)
