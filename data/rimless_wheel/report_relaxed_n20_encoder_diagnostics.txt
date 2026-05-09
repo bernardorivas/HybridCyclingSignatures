@@ -2,7 +2,7 @@
 ============================================================
 PHASE A  |  RELAXED-SPACE ENCODER DIAGNOSTICS (rimless)
 ============================================================
-model: C:\Users\roger\OneDrive - Umich\Kaito Iwasaki\The Vault\Research\2026\HybridCyclingSignatures\runs\rimless_wheel\model.pt
+model: runs/rimless_wheel/model.pt
 trajectory: 20 arcs, 20 jumps, n_s=50
 lift shape: (3840, 3)  (samples, latent_dim)
 
@@ -24,8 +24,8 @@ lift shape: (3840, 3)  (samples, latent_dim)
 [3] Finite-difference tangent quality
   pre-normalize norm: median=4.514e-03  p5=2.708e-03  min=2.088e-03
   samples with pre-norm < 1e-6: 0 (unit-normalization yields direction from noise at these points)
-  pre-jump  (arc -> bridge): median=0.3 deg  max=0.3 deg  (n=20)
-  post-jump (bridge -> arc): median=76.2 deg  max=76.2 deg  (n=19)
+  pre-jump  (arc -> bridge), visual kink: median=124.5 deg  max=124.5 deg  (n=20)
+  post-jump (bridge -> arc), visual kink: median=78.2 deg  max=78.2 deg  (n=19)
 
 [4] Bridge-to-bridge separation under DynamicDistance
     metric: max(||p-q||, C*||v-w||) with C = boxsize * sb_radius

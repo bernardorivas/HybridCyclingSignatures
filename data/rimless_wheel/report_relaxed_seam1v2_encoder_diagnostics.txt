@@ -2,36 +2,36 @@
 ============================================================
 PHASE A  |  RELAXED-SPACE ENCODER DIAGNOSTICS (rimless)
 ============================================================
-model: runs/rimless_wheel/model_seam1.pt
+model: runs/rimless_wheel/model_seam1v2.pt
 trajectory: 20 arcs, 20 jumps, n_s=50
 lift shape: (3840, 3)  (samples, latent_dim)
 
 [1] Reconstruction D(E(.)) vs input  (injectivity witness on sampled data)
-  full err (arcs, s=0)      mean=6.536e-02  median=2.153e-02  p95=2.747e-01  max=3.217e-01
-  full err (bridges)        mean=3.980e-02  median=1.634e-02  p95=1.170e-01  max=6.769e-01
-  state err (arcs)          mean=5.704e-02  median=1.960e-02  p95=2.396e-01  max=2.569e-01
-  state err (bridges)       mean=2.507e-02  median=1.134e-02  p95=6.073e-02  max=4.216e-01
+  full err (arcs, s=0)      mean=1.091e-02  median=8.482e-03  p95=1.727e-02  max=1.767e-01
+  full err (bridges)        mean=3.291e-02  median=7.256e-03  p95=1.009e-01  max=6.991e-01
+  state err (arcs)          mean=9.531e-03  median=8.012e-03  p95=1.487e-02  max=1.257e-01
+  state err (bridges)       mean=2.177e-02  median=6.398e-03  p95=6.602e-02  max=4.422e-01
   note: the decoder reconstructs s freely (no forcing); bridge
         samples near s=0 or s=1 are masked during Phase II training
         (manuscript Section 4) so some residual near boundaries is expected.
 
 [2] Latent near-collisions from time-distant samples (collapse screen)
   min time-distant latent distance:  0.000e+00
-  median time-distant latent/input ratio: 0.737
+  median time-distant latent/input ratio: 0.565
   p5 ratio:                          0.000  (low = potential collapse)
   pairs with ratio < 0.25 AND input_dist > 0.1: 0/3840
 
 [3] Finite-difference tangent quality
-  pre-normalize norm: median=3.493e-03  p5=1.438e-03  min=1.401e-03
+  pre-normalize norm: median=2.494e-03  p5=1.098e-03  min=1.084e-03
   samples with pre-norm < 1e-6: 0 (unit-normalization yields direction from noise at these points)
-  pre-jump  (arc -> bridge), visual kink: median=145.7 deg  max=145.7 deg  (n=20)
-  post-jump (bridge -> arc), visual kink: median=1.5 deg  max=1.5 deg  (n=19)
+  pre-jump  (arc -> bridge), visual kink: median=2.0 deg  max=2.0 deg  (n=20)
+  post-jump (bridge -> arc), visual kink: median=1.4 deg  max=1.4 deg  (n=19)
 
 [4] Bridge-to-bridge separation under DynamicDistance
     metric: max(||p-q||, C*||v-w||) with C = boxsize * sb_radius
-  C=0.05:  inter_bridge_min=0.000e+00  arc_step_median=2.733e-03  rho=0.00
-  C=0.20:  inter_bridge_min=0.000e+00  arc_step_median=5.109e-03  rho=0.00
-  C=0.50:  inter_bridge_min=0.000e+00  arc_step_median=9.161e-03  rho=0.00
-  C=1.00:  inter_bridge_min=0.000e+00  arc_step_median=1.724e-02  rho=0.00
+  C=0.05:  inter_bridge_min=0.000e+00  arc_step_median=2.209e-03  rho=0.00
+  C=0.20:  inter_bridge_min=0.000e+00  arc_step_median=5.328e-03  rho=0.00
+  C=0.50:  inter_bridge_min=0.000e+00  arc_step_median=1.332e-02  rho=0.00
+  C=1.00:  inter_bridge_min=0.000e+00  arc_step_median=2.664e-02  rho=0.00
   note: rimless bridges are observations of the same canonical jump
         (the wheel-spoke impact); low inter-bridge distance is expected.

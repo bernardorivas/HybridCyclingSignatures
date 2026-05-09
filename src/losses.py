@@ -115,47 +115,65 @@ def compute_collapse_loss(model, x, cfg):
 
 
 def compute_seam_loss(model, sys, cfg):
-    """L_seam: cosine mismatch between the bridge-end tangent direction and the
-    next arc-start tangent direction at the same latent point.
+    """L_seam: cosine mismatch at BOTH cylinder-arc seams.
 
-    Bridge-end tangent is the s-direction velocity v_cyl(g, 1); arc-start
-    tangent at the next arc is grad_x E(r(g), 0) . v_X(r(g)) (the encoder
-    Jacobian applied to the post-reset physical velocity). L_utb already
-    anchors v_cyl(g, 1) to v_X(r(g)) padded, but does not constrain
-    grad_x E, so the two tangent DIRECTIONS in latent space typically
-    disagree (the post-jump cusp). This loss directly closes that gap.
+    Pre-jump (arc-end -> bridge-start, at base point g, s=0):
+      arc-end tangent in latent  = grad_x E(g, 0) . v_X(g)
+      bridge-start tangent       = ∂_s E(g, 0)         (anchored ~v_X(g) by L_utb)
+    Post-jump (bridge-end -> next arc-start, at base point r(g), s=1):
+      bridge-end tangent         = ∂_s E(g, 1)         (anchored ~v_X(r(g)) by L_utb)
+      next-arc-start tangent     = grad_x E(r(g), 0) . v_X(r(g))
 
-    Defined as `1 - cos(angle)` over sampled guard states; small means
-    the two unit tangents agree.
+    L_utb anchors the bridge tangents but does not constrain grad_x E, so
+    BOTH seams generically have a directional cusp. This loss directly
+    closes both via `(1 - cos)` over sampled guard states.
+
+    Without this, the most visible cusp can sit at the pre-jump (impact
+    moment) and the trajectory's lift-tangent flips by ~140 deg even when
+    L_utb is fully satisfied.
     """
     device = next(model.parameters()).device
-    n = cfg.state_dim
     h = cfg.utb_finite_diff_h
     num_samples = cfg.utb_num_samples
 
     g_states = _sample_guard_states(cfg, num_samples)
     r_states = np.array([sys.reset_map(g) for g in g_states])
+    v_g  = np.array([sys.base_vector_field(0,  g) for  g in g_states])
     v_rg = np.array([sys.base_vector_field(0, rg) for rg in r_states])
 
-    # Bridge-end tangent in latent: finite-difference s-direction at s=1.
     g_t = torch.as_tensor(g_states, dtype=torch.float32, device=device)
+    r_t = torch.as_tensor(r_states, dtype=torch.float32, device=device)
+    vg_t  = torch.as_tensor(v_g,  dtype=torch.float32, device=device)
+    vrg_t = torch.as_tensor(v_rg, dtype=torch.float32, device=device)
+    zeros = torch.zeros(num_samples, 1, device=device)
+
+    # Bridge-end tangent at s=1 (post-jump seam): finite-difference along s.
     x_g_1   = torch.cat([g_t, torch.ones(num_samples, 1, device=device)], dim=-1)
     x_g_1mh = torch.cat([g_t, torch.full((num_samples, 1), 1.0 - h, device=device)], dim=-1)
-    v_bridge = (model.E(x_g_1) - model.E(x_g_1mh)) / h          # (B, d)
+    v_bridge_end = (model.E(x_g_1) - model.E(x_g_1mh)) / h
 
-    # Arc-start tangent in latent: JVP of E at (r(g), 0) in direction (v_X(r(g)), 0).
-    r_t = torch.as_tensor(r_states, dtype=torch.float32, device=device)
-    v_t = torch.as_tensor(v_rg,    dtype=torch.float32, device=device)
-    x_at = torch.cat([r_t, torch.zeros(num_samples, 1, device=device)], dim=-1)
-    dir_ = torch.cat([v_t, torch.zeros(num_samples, 1, device=device)], dim=-1)
-    _, v_arc = torch.func.jvp(model.E, (x_at,), (dir_,))         # (B, d)
+    # Bridge-start tangent at s=0 (pre-jump seam): finite-difference along s.
+    x_g_0 = torch.cat([g_t, zeros], dim=-1)
+    x_g_h = torch.cat([g_t, torch.full((num_samples, 1), h, device=device)], dim=-1)
+    v_bridge_start = (model.E(x_g_h) - model.E(x_g_0)) / h
 
-    # Cosine-distance loss on direction only.
+    # Next-arc-start tangent: JVP of E at (r(g), 0) in direction (v_X(r(g)), 0).
+    x_at_post = torch.cat([r_t, zeros], dim=-1)
+    dir_post  = torch.cat([vrg_t, zeros], dim=-1)
+    _, v_arc_post = torch.func.jvp(model.E, (x_at_post,), (dir_post,))
+
+    # Arc-end tangent: JVP of E at (g, 0) in direction (v_X(g), 0).
+    x_at_pre = torch.cat([g_t, zeros], dim=-1)
+    dir_pre  = torch.cat([vg_t, zeros], dim=-1)
+    _, v_arc_pre = torch.func.jvp(model.E, (x_at_pre,), (dir_pre,))
+
     eps = 1e-8
-    u_b = v_bridge / (v_bridge.norm(dim=-1, keepdim=True) + eps)
-    u_a = v_arc    / (v_arc.norm(dim=-1, keepdim=True)    + eps)
-    cos = (u_b * u_a).sum(dim=-1)                                # (B,)
-    return (1.0 - cos).mean()
+    def _cos_loss(a, b):
+        ua = a / (a.norm(dim=-1, keepdim=True) + eps)
+        ub = b / (b.norm(dim=-1, keepdim=True) + eps)
+        return (1.0 - (ua * ub).sum(dim=-1)).mean()
+
+    return _cos_loss(v_bridge_start, v_arc_pre) + _cos_loss(v_bridge_end, v_arc_post)
 
 
 def compute_utb_loss(model, sys, cfg):
