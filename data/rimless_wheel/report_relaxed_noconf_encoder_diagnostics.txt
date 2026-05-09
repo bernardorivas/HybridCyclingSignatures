@@ -1,0 +1,37 @@
+
+============================================================
+PHASE A  |  RELAXED-SPACE ENCODER DIAGNOSTICS (rimless)
+============================================================
+model: runs/rimless_wheel/model_noconf.pt
+trajectory: 5 arcs, 5 jumps, n_s=50
+lift shape: (960, 3)  (samples, latent_dim)
+
+[1] Reconstruction D(E(.)) vs input  (injectivity witness on sampled data)
+  full err (arcs, s=0)      mean=6.397e-03  median=5.208e-03  p95=1.384e-02  max=2.459e-02
+  full err (bridges)        mean=2.181e-02  median=4.996e-03  p95=3.549e-02  max=5.861e-01
+  state err (arcs)          mean=4.720e-03  median=3.971e-03  p95=1.046e-02  max=1.667e-02
+  state err (bridges)       mean=1.443e-02  median=3.593e-03  p95=2.914e-02  max=3.811e-01
+  note: the decoder reconstructs s freely (no forcing); bridge
+        samples near s=0 or s=1 are masked during Phase II training
+        (manuscript Section 4) so some residual near boundaries is expected.
+
+[2] Latent near-collisions from time-distant samples (collapse screen)
+  min time-distant latent distance:  1.205e-05
+  median time-distant latent/input ratio: 1.432
+  p5 ratio:                          1.138  (low = potential collapse)
+  pairs with ratio < 0.25 AND input_dist > 0.1: 0/960
+
+[3] Finite-difference tangent quality
+  pre-normalize norm: median=6.685e-03  p5=1.626e-03  min=1.576e-03
+  samples with pre-norm < 1e-6: 0 (unit-normalization yields direction from noise at these points)
+  pre-jump  (arc -> bridge): median=0.7 deg  max=0.7 deg  (n=5)
+  post-jump (bridge -> arc): median=39.4 deg  max=39.4 deg  (n=4)
+
+[4] Bridge-to-bridge separation under DynamicDistance
+    metric: max(||p-q||, C*||v-w||) with C = boxsize * sb_radius
+  C=0.05:  inter_bridge_min=1.233e-05  arc_step_median=3.736e-03  rho=0.00
+  C=0.20:  inter_bridge_min=1.233e-05  arc_step_median=6.819e-03  rho=0.00
+  C=0.50:  inter_bridge_min=1.233e-05  arc_step_median=9.856e-03  rho=0.00
+  C=1.00:  inter_bridge_min=1.239e-05  arc_step_median=1.293e-02  rho=0.00
+  note: rimless bridges are observations of the same canonical jump
+        (the wheel-spoke impact); low inter-bridge distance is expected.

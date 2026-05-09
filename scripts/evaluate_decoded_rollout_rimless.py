@@ -11,6 +11,7 @@ Outputs:
     figures/rimless_wheel/fig_rimless_decoded_rollout_traces.png
     data/rimless_wheel/report_decoded_rollout_metrics.txt
 """
+import argparse
 import sys
 from pathlib import Path
 
@@ -33,11 +34,21 @@ from simulate import simulate_rimless_wheel  # noqa: E402
 
 
 ROOT = Path(__file__).parent.parent
-MODEL_PATH = ROOT / "runs" / "rimless_wheel" / "model.pt"
 FIG_DIR = ROOT / "figures" / "rimless_wheel"
 DATA_DIR = ROOT / "data" / "rimless_wheel"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+_DEFAULT_MODEL = ROOT / "runs" / "rimless_wheel" / "model.pt"
+
+
+def _parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument("--model", type=Path, default=_DEFAULT_MODEL,
+                   help="Path to trained model.pt.")
+    p.add_argument("--out-suffix", default="",
+                   help="Suffix appended to output figure / report names.")
+    return p.parse_args()
 
 # Limit-cycle post-reset state for alpha=0.4, gamma=0.2:
 #   omega_minus^2 = 2*(cos(theta_reset) - cos(theta_guard)) / sin^2(2*alpha)
@@ -65,13 +76,17 @@ def _extend_with_bridges(segments, jump_pairs, n_bridge=50):
 
 
 def main():
-    if not MODEL_PATH.exists():
-        print(f"ERROR: missing {MODEL_PATH}. Train first.")
+    args = _parse_args()
+    model_path = args.model
+    suffix = args.out_suffix
+
+    if not model_path.exists():
+        print(f"ERROR: missing {model_path}. Train first.")
         sys.exit(1)
 
-    print(f"Loading {MODEL_PATH}")
+    print(f"Loading {model_path}")
     net = SuspensionNetworks()
-    net.load_state_dict(torch.load(MODEL_PATH, map_location="cpu", weights_only=True))
+    net.load_state_dict(torch.load(model_path, map_location="cpu", weights_only=True))
     net.eval()
     E, D, F = net.E, net.D, net.F
 
@@ -138,7 +153,7 @@ def main():
     ax.legend(fontsize=9, loc="lower left")
     ax.grid(alpha=0.3)
     fig.tight_layout()
-    out_phase = FIG_DIR / "fig_rimless_decoded_rollout_phase.png"
+    out_phase = FIG_DIR / f"fig_rimless_decoded_rollout_phase{suffix}.png"
     fig.savefig(out_phase, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {out_phase}")
@@ -157,7 +172,7 @@ def main():
     axes[0].legend(fontsize=9, loc="upper right", ncol=2)
     axes[0].set_title("Encoder-decoder round-trip $D(E(x))$ — full rollout")
     fig.tight_layout()
-    out_traces = FIG_DIR / "fig_rimless_decoded_rollout_traces.png"
+    out_traces = FIG_DIR / f"fig_rimless_decoded_rollout_traces{suffix}.png"
     fig.savefig(out_traces, dpi=200)
     plt.close(fig)
     print(f"wrote {out_traces}")
@@ -166,7 +181,7 @@ def main():
     report = []
     report.append("Rimless-wheel decoded-rollout evaluation")
     report.append("=" * 48)
-    report.append(f"model:  {MODEL_PATH}")
+    report.append(f"model:  {model_path}")
     report.append(f"IC:     {ic}")
     report.append(f"arcs:   {len(segments)}  jumps: {len(jump_pairs)}")
     report.append(f"samples: {X_raw.shape[0]}  (arc: {int(arc_mask.sum())}, "
@@ -201,7 +216,7 @@ def main():
 
     txt = "\n".join(report) + "\n"
     print("\n" + txt)
-    out_report = DATA_DIR / "report_decoded_rollout_metrics.txt"
+    out_report = DATA_DIR / f"report_decoded_rollout_metrics{suffix}.txt"
     out_report.write_text(txt, encoding="utf-8")
     print(f"wrote {out_report}")
 
