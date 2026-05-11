@@ -202,14 +202,25 @@ _log(f"  pre-normalize norm: median={np.median(tangent_norms_pre):.3e}  "
 _log(f"  samples with pre-norm < 1e-6: {int((tangent_norms_pre < 1e-6).sum())} "
      f"(unit-normalization yields direction from noise at these points)")
 
-# Junction direction jumps
-pre_jump_angles = []   # arc -> bridge
-post_jump_angles = []  # bridge -> arc
-for k in range(len(tags) - 1):
-    if tags[k] == tags[k + 1]:
+# Visual junction kinks: angle between segment-internal forward step on each
+# side. A naive forward-difference at the seam itself reads tiny because
+# bridge samples right after an impact already point in the s-direction,
+# masking the real change-of-direction.
+pre_jump_angles = []   # arc-internal -> bridge-internal at impact (s=0 seam)
+post_jump_angles = []  # bridge-internal -> next-arc-internal at gluing (s=1 seam)
+
+def _step(a, b):
+    v = Z[b] - Z[a]
+    return v / max(np.linalg.norm(v), 1e-12)
+
+for k in range(1, len(tags) - 2):
+    if tags[k][0] == tags[k + 1][0]:
         continue
-    dot = float(np.clip(np.dot(tx[k], tx[k + 1]), -1.0, 1.0))
-    angle = float(np.degrees(np.arccos(dot)))
+    if tags[k - 1] != tags[k] or tags[k + 1] != tags[k + 2]:
+        continue
+    t_left  = _step(k - 1, k)
+    t_right = _step(k + 1, k + 2)
+    angle = float(np.degrees(np.arccos(np.clip(np.dot(t_left, t_right), -1.0, 1.0))))
     if tags[k][0] == "arc" and tags[k + 1][0] == "bridge":
         pre_jump_angles.append(angle)
     elif tags[k][0] == "bridge" and tags[k + 1][0] == "arc":
@@ -222,8 +233,8 @@ def _angle_summary(lbl, arr):
     a = np.array(arr)
     _log(f"  {lbl}: median={np.median(a):.1f} deg  max={a.max():.1f} deg  (n={len(a)})")
 
-_angle_summary("pre-jump  (arc -> bridge)", pre_jump_angles)
-_angle_summary("post-jump (bridge -> arc)", post_jump_angles)
+_angle_summary("pre-jump  (arc -> bridge), visual kink", pre_jump_angles)
+_angle_summary("post-jump (bridge -> arc), visual kink", post_jump_angles)
 
 # ---------------- 4. Pairwise bridge separation under David's DynamicDistance ----------------
 _log("")

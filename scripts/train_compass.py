@@ -8,6 +8,7 @@ Phase II  — freeze E and F, train D alone on masked L_recon with larger LR.
 Saves model weights to runs/compass_gait/model.pt and per-term loss history
 plot to figures/compass_gait/fig_compass_optimization_losses.png.
 """
+import argparse
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -49,11 +50,23 @@ def _resolve_device():
     return torch.device("cpu")
 
 
-def train_compass_gait():
+def _parse_args():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--weight-conf", type=float, default=config.weight_conf)
+    p.add_argument("--weight-utb",  type=float, default=config.weight_utb)
+    p.add_argument("--weight-seam", type=float, default=config.weight_seam)
+    p.add_argument("--embed-extra", type=int,   default=config.embed_extra)
+    p.add_argument("--out-suffix", default="")
+    return p.parse_args()
+
+
+def train_compass_gait(out_suffix=""):
     matplotlib.rcParams.update(PUB_STYLE)
     print("Compass-gait relaxed-space training (Section 4 pipeline)")
     print(f"  state_dim={config.state_dim}, embed_dim={config.embed_dim}")
     print(f"  phi={np.degrees(config.phi):.1f} deg, mu={config.mu}, beta={config.beta}")
+    print(f"  weight_conf={config.weight_conf}, weight_utb={config.weight_utb}, "
+          f"weight_seam={config.weight_seam}, out_suffix={out_suffix!r}")
 
     device = _resolve_device()
     print(f"  device={device}\n")
@@ -86,7 +99,10 @@ def train_compass_gait():
     )
     sched1 = optim.lr_scheduler.CosineAnnealingLR(opt_phase1, T_max=config.phase1_epochs)
 
-    phase1_history = {k: [] for k in ('dyn', 'glue', 'conf', 'coll', 'utb', 'total')}
+    phase1_keys = ['dyn', 'glue', 'conf', 'coll', 'utb', 'total']
+    if config.weight_seam > 0:
+        phase1_keys.insert(-1, 'seam')
+    phase1_history = {k: [] for k in phase1_keys}
 
     for epoch in range(config.phase1_epochs):
         model.train()
@@ -111,9 +127,11 @@ def train_compass_gait():
 
         if (epoch + 1) == 1 or (epoch + 1) % 10 == 0:
             h = {k: phase1_history[k][-1] for k in phase1_history}
+            extra = f"  seam={h['seam']:.4f}" if 'seam' in h else ""
             print(f"  [P1] Epoch {epoch+1:3d}/{config.phase1_epochs}  "
                   f"total={h['total']:.4f}  dyn={h['dyn']:.4f}  glue={h['glue']:.4f}  "
-                  f"conf={h['conf']:.2e}  coll={h['coll']:.4f}  utb={h['utb']:.4f}")
+                  f"conf={h['conf']:.2e}  coll={h['coll']:.4f}  utb={h['utb']:.4f}"
+                  f"{extra}")
 
     # Freeze E and F
     for p in model.E.parameters(): p.requires_grad = False
@@ -156,7 +174,7 @@ def train_compass_gait():
     # 3. Save model
     out_dir = ROOT / "runs" / "compass_gait"
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / "model.pt"
+    out_path = out_dir / f"model{out_suffix}.pt"
     torch.save(model.state_dict(), out_path)
     print(f"\nModel saved to {out_path}")
 
@@ -172,6 +190,9 @@ def train_compass_gait():
     ax1.semilogy(ep1, phase1_history['conf'],  color=OKABE_ITO[2], lw=1.2, label=r'$\mathcal{L}_{\mathrm{conf}}$')
     ax1.semilogy(ep1, phase1_history['coll'],  color=OKABE_ITO[3], lw=1.2, label=r'$\mathcal{L}_{\mathrm{coll}}$')
     ax1.semilogy(ep1, phase1_history['utb'],   color=OKABE_ITO[4], lw=1.2, label=r'$\mathcal{L}_{\mathrm{utb}}$')
+    if 'seam' in phase1_history:
+        ax1.semilogy(ep1, phase1_history['seam'], color=OKABE_ITO[6], lw=1.2,
+                     label=r'$\mathcal{L}_{\mathrm{seam}}$')
     ax1.set_xlabel('Epoch'); ax1.set_ylabel('Loss (MSE)')
     ax1.set_title('Phase I: encoder + semiflow')
     ax1.legend(fontsize=8, ncol=2)
@@ -184,11 +205,16 @@ def train_compass_gait():
     ax2.legend(fontsize=8)
 
     fig.tight_layout()
-    fig_path = fig_dir / "fig_compass_optimization_losses.png"
+    fig_path = fig_dir / f"fig_compass_optimization_losses{out_suffix}.png"
     fig.savefig(fig_path, dpi=200)
     plt.close(fig)
     print(f"Loss figure saved to {fig_path}")
 
 
 if __name__ == '__main__':
-    train_compass_gait()
+    args = _parse_args()
+    config.weight_conf = args.weight_conf
+    config.weight_utb = args.weight_utb
+    config.weight_seam = args.weight_seam
+    config.embed_extra = args.embed_extra
+    train_compass_gait(out_suffix=args.out_suffix)

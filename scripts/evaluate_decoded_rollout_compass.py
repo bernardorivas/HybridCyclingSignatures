@@ -11,6 +11,7 @@ Outputs:
     figures/compass_gait/fig_compass_decoded_rollout_traces.png
     data/compass_gait/report_decoded_rollout_metrics.txt
 """
+import argparse
 import os
 import sys
 from pathlib import Path
@@ -35,11 +36,20 @@ from simulate import simulate_compass_gait, LIMIT_CYCLE_IC, PHI  # noqa: E402
 
 
 ROOT = Path(__file__).parent.parent
-MODEL_PATH = ROOT / "runs" / "compass_gait" / "model.pt"
 FIG_DIR = ROOT / "figures" / "compass_gait"
 DATA_DIR = ROOT / "data" / "compass_gait"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+_DEFAULT_MODEL = ROOT / "runs" / "compass_gait" / "model.pt"
+
+
+def _parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument("--model", type=Path, default=_DEFAULT_MODEL)
+    p.add_argument("--out-suffix", default="")
+    p.add_argument("--embed-extra", type=int, default=config.embed_extra)
+    return p.parse_args()
 
 
 def _extend_with_bridges(segments, jump_pairs, n_bridge=50):
@@ -61,13 +71,18 @@ def _extend_with_bridges(segments, jump_pairs, n_bridge=50):
 
 
 def main():
-    if not MODEL_PATH.exists():
-        print(f"ERROR: missing {MODEL_PATH}. Train first.")
+    args = _parse_args()
+    model_path = args.model
+    suffix = args.out_suffix
+    config.embed_extra = args.embed_extra
+
+    if not model_path.exists():
+        print(f"ERROR: missing {model_path}. Train first.")
         sys.exit(1)
 
-    print(f"Loading {MODEL_PATH}")
+    print(f"Loading {model_path}  (embed_dim={config.embed_dim})")
     net = SuspensionNetworks()
-    net.load_state_dict(torch.load(MODEL_PATH, map_location="cpu", weights_only=True))
+    net.load_state_dict(torch.load(model_path, map_location="cpu", weights_only=True))
     net.eval()
     E, D, F = net.E, net.D, net.F
 
@@ -147,7 +162,7 @@ def main():
     fig.suptitle("Encoder-decoder round-trip D(E(x)) on held-out rollout",
                  fontsize=11, y=1.02)
     fig.tight_layout()
-    out_phase = FIG_DIR / "fig_compass_decoded_rollout_phase.png"
+    out_phase = FIG_DIR / f"fig_compass_decoded_rollout_phase{suffix}.png"
     fig.savefig(out_phase, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {out_phase}")
@@ -167,7 +182,7 @@ def main():
     axes[0].legend(fontsize=9, loc="upper right", ncol=2)
     axes[0].set_title("Encoder-decoder round-trip D(E(x)) — full rollout")
     fig.tight_layout()
-    out_traces = FIG_DIR / "fig_compass_decoded_rollout_traces.png"
+    out_traces = FIG_DIR / f"fig_compass_decoded_rollout_traces{suffix}.png"
     fig.savefig(out_traces, dpi=200)
     plt.close(fig)
     print(f"wrote {out_traces}")
@@ -176,7 +191,7 @@ def main():
     report = []
     report.append("Compass-gait decoded-rollout evaluation")
     report.append("=" * 48)
-    report.append(f"model:  {MODEL_PATH}")
+    report.append(f"model:  {model_path}")
     report.append(f"IC:     {ic}")
     report.append(f"arcs:   {len(segments)}  jumps: {len(jump_pairs)}")
     report.append(f"samples: {X_raw.shape[0]}  (arc: {int(arc_mask.sum())}, "
@@ -211,7 +226,7 @@ def main():
 
     txt = "\n".join(report) + "\n"
     print("\n" + txt)
-    out_report = DATA_DIR / "report_decoded_rollout_metrics.txt"
+    out_report = DATA_DIR / f"report_decoded_rollout_metrics{suffix}.txt"
     out_report.write_text(txt, encoding="utf-8")
     print(f"wrote {out_report}")
 
