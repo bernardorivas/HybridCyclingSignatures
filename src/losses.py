@@ -3,10 +3,13 @@ Six-term loss from Section 4 of the manuscript (eq. loss_total):
 
     L_total = w_dyn  * L_dyn
             + w_glue * L_glue
-            + w_recon* L_recon
+            + w_seam * L_seam
             + w_conf * L_conf
             + w_coll * L_coll
-            + w_utb  * L_utb
+            + w_recon* L_recon
+
+L_utb is kept as a legacy one-sided tangent anchor (default weight 0);
+L_seam subsumes it with a two-sided cosine-tangent constraint.
 
 Phase I (manuscript Algorithm 1) trains E and F on all terms EXCEPT L_recon.
 Phase II freezes E and F and trains D alone on masked L_recon with larger LR.

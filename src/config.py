@@ -100,8 +100,8 @@ class HybridSuspensionConfig:
     weight_recon: float = 1.0     # L_recon: D(E(x)) ≈ x (Phase II only)
     weight_conf: float = 0.01     # L_conf: conformal Jacobian
     weight_coll: float = 1.0      # L_coll: anti-collapse via per-coord variance
-    weight_utb: float = 1.0       # L_utb: finite-diff tangent at s=0 and s=1
-    weight_seam: float = 0.0      # L_seam: cosine mismatch bridge-end vs arc-start tangent (0 = off)
+    weight_seam: float = 1.0      # L_seam: cosine mismatch bridge vs arc-start tangents (canonical)
+    weight_utb: float = 0.0       # L_utb: legacy finite-diff tangent anchor (subsumed by L_seam)
 
     # Backward-compat alias (older scripts referenced `weight_comm`).
     @property
