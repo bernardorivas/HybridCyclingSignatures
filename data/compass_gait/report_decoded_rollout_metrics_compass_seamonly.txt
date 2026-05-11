@@ -1,0 +1,23 @@
+Compass-gait decoded-rollout evaluation
+================================================
+model:  runs\compass_gait\model_compass_seamonly.pt
+IC:     [-0.35586245  0.20481143 -0.41792653 -1.06208457]
+arcs:   8  jumps: 8
+samples: 1615  (arc: 1215, bridge: 400)
+
+[D(E(x)) round-trip]
+  state err  mean=3.905e-01  median=3.284e-01  p95=8.998e-01  max=1.825e+00
+  s err      mean=8.774e-02  max=8.080e-01
+  arc-only state err   mean=3.296e-01  max=1.033e+00
+  bridge state err     mean=5.755e-01  max=1.825e+00
+
+[Semiflow one-step D(F(E(x_i))) vs x_{i+1}]
+  state err  mean=5.325e-01  median=4.864e-01  p95=9.597e-01  max=2.022e+00
+
+[Semiflow long-horizon rollout D(F^k(E(x0)))]
+  state err  mean=4.238e+35  median=5.856e+37  p95=6.813e+35
+  state err at step 10: 3.537e+00
+  state err at step 25: 2.305e+01
+  state err at step 50: 1.194e+01
+  state err at step 100: 8.980e+02
+  state err at step 200: 7.002e+06
