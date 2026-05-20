@@ -1,0 +1,645 @@
+\documentclass[10pt,aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{dolphin}
+\usefonttheme{professionalfonts}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{deepblue}{RGB}{0,70,130}
+\setbeamercolor{title}{fg=deepblue}
+\setbeamercolor{frametitle}{fg=deepblue}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize items}[circle]
+
+\newcommand{\code}[1]{\texttt{\small\detokenize{#1}}}
+\newcommand{\file}[1]{\texttt{\small\detokenize{#1}}}
+
+\title[CHyLL v2 handoff]{Successful CHyLL v2 Examples: User Guide}
+\subtitle{Data, models, and how to regenerate the downstream inputs}
+\author{Kaito Iwasaki}
+\date{Thursday walkthrough}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Purpose of the Meeting}
+  \begin{itemize}
+    \item Give David and Bernardo a clean bundle with only successful examples.
+    \item Map each file to the mathematical/computational object it contains.
+    \item Show how to load the data immediately.
+    \item Explain what the CHyLL v2 losses enforce and where they live in code.
+    \item Show how to regenerate the exported lift data from the trained models.
+    \item Identify what David needs for his downstream computations.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{What We Are Sending}
+  The file to send is:
+
+  \vspace{0.5em}
+  \begin{center}
+    \file{2026-05-19_successful_examples_chyll_v2_repro.zip}
+  \end{center}
+
+  \vspace{0.5em}
+  It contains:
+  \begin{itemize}
+    \item exported data for all successful examples,
+    \item trained model weights and configs,
+    \item minimal source code needed to reload/export,
+    \item rollout figures for every successful model,
+    \item training loss-history figures for every successful training,
+    \item selected additional orientation figures,
+    \item a README, examples table, requirements file, and hash manifest.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{What Is Deliberately Not Included}
+  The bundle excludes:
+  \begin{itemize}
+    \item smoke-test runs,
+    \item failed compass uniform-initial-condition run,
+    \item intermediate ablations,
+    \item obsolete top-level \file{data/compass_gait/} files,
+    \item older non-\file{chyll_v2} architecture outputs.
+  \end{itemize}
+
+  \vspace{0.5em}
+  The goal is to avoid making David sort through bad or superseded data.
+\end{frame}
+
+\begin{frame}{The Successful Examples}
+  \small
+  \begin{tabular}{lll}
+    \toprule
+    Folder & System & Meaning \\
+    \midrule
+    \file{rimless_wheel_phaseB} & Rimless wheel & Stable limit cycle \\
+    \file{bouncing_ball_phaseB_5impacts} & Bouncing ball & 5-impact lift \\
+    \file{bouncing_ball_phaseB_15impacts} & Bouncing ball & 15-impact lift \\
+    \file{compass_period2_4p75deg_phi1} & Compass gait & 4.75 deg, period 2 \\
+    \file{compass_period4_5p00deg_phi2} & Compass gait & 5.00 deg, period 4 \\
+    \file{compass_period8_5p02deg_phi3} & Compass gait & 5.02 deg, period 8 \\
+    \file{compass_chaotic_cloud_5p20deg_phi4} & Compass gait & 5.20 deg, chaotic/cloud \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+\begin{frame}{One-Sentence Big Picture}
+  Each example is a hybrid dynamical system trajectory embedded by CHyLL v2
+  into a continuous latent space.
+
+  \vspace{1em}
+  The exported files give David:
+  \begin{itemize}
+    \item points along the latent trajectory,
+    \item tangent directions along that trajectory,
+    \item the trained model that generated them,
+    \item and the existing cycling-signature output files.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Notation and Artifact Map}
+  \small
+  \begin{tabular}{ll}
+    \toprule
+    Artifact & Meaning \\
+    \midrule
+    \file{data/<case>/} & exported lifts and downstream outputs \\
+    \file{models/<case>/} & trained CHyLL v2 checkpoint and run config \\
+    \file{latent_lift_positions.npy} & sampled points in learned latent space \\
+    \file{latent_lift_tangents.npy} & tangent vectors along the sampled lift \\
+    \file{postimpact_*} & compass Poincare-section data after impact \\
+    \file{cycling_signature_outputs/} & existing downstream outputs for comparison \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.8em}
+  Convention: \file{<case>} denotes one row of \file{examples.csv}.
+\end{frame}
+
+\begin{frame}[fragile]{Commands Used in the Demo}
+  The only commands needed for the walkthrough are:
+
+\begin{verbatim}
+cd <bundle folder>
+python -m pip install -r requirements.txt
+python export_all_lifts.py
+\end{verbatim}
+
+  Replace \code{<bundle folder>} by the unzipped bundle path.
+  If the path contains spaces, put quotes around it.
+\end{frame}
+
+\begin{frame}{Top-Level Folder Layout}
+  After unzipping:
+
+  \vspace{0.5em}
+  \begin{tabular}{ll}
+    \file{data/} & ready-to-use exported data \\
+    \file{models/} & trained model weights and configs \\
+    \file{source/} & source code needed to reload/export \\
+    \file{figures/} & rollout, loss-history, and orientation plots \\
+    \file{README.md} & text user guide \\
+    \file{examples.csv} & table of examples \\
+    \file{export_all_lifts.py} & regenerate exported lifts \\
+    \file{requirements.txt} & Python package list \\
+    \file{MANIFEST.csv} & file hashes \\
+  \end{tabular}
+\end{frame}
+
+\begin{frame}{Rollout and Loss Figures}
+  The \file{figures/} folder includes every successful rollout overlay:
+
+  \begin{itemize}
+    \item rimless wheel: short, index, and long rollout plots,
+    \item bouncing ball: standard and index rollout plots,
+    \item compass gait: one rollout plot for each incline case,
+    \item loss-history plots for the six successful trainings,
+    \item plus rank heatmaps and the compass latent-cluster panel.
+  \end{itemize}
+
+  \vspace{0.5em}
+  These are diagnostic plots. The arrays for downstream computation are still
+  the \file{data/<case>/latent_lift_*} files.
+\end{frame}
+
+\begin{frame}{Data Folder Anatomy}
+  Each example folder in \file{data/} contains:
+
+  \begin{itemize}
+    \item \file{latent_lift_positions.npy}
+    \item \file{latent_lift_tangents.npy}
+    \item \file{latent_lift_positions.csv}
+    \item \file{latent_lift_tangents.csv}
+    \item \file{export_report.txt}
+    \item \file{cycling_signature_outputs/}
+  \end{itemize}
+
+  \vspace{0.5em}
+  The \file{.npy} files are best for Python. The \file{.csv} files are easier
+  for spreadsheets and quick inspection.
+\end{frame}
+
+\begin{frame}{What Are Positions and Tangents?}
+  \begin{itemize}
+    \item \file{latent_lift_positions} is the sequence of points in latent space.
+    \item \file{latent_lift_tangents} is the direction of motion at each point.
+    \item The two arrays have the same shape.
+    \item David's cycling-signature code uses both positions and tangents.
+  \end{itemize}
+
+  \vspace{0.5em}
+  Example: a shape \code{(960, 7)} means:
+  \begin{itemize}
+    \item 960 sampled points,
+    \item each point has 7 latent coordinates.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Shapes of the Exported Lifts}
+  \small
+  \begin{tabular}{ll}
+    \toprule
+    Example & Position/tangent shape \\
+    \midrule
+    Rimless wheel Phase-B & \code{(960, 7)} \\
+    Bouncing ball, 5 impacts & \code{(1069, 7)} \\
+    Bouncing ball, 15 impacts & \code{(2004, 7)} \\
+    Compass 4.75 deg, period 2 & \code{(2032, 11)} \\
+    Compass 5.00 deg, period 4 & \code{(2036, 11)} \\
+    Compass 5.02 deg, period 8 & \code{(2036, 11)} \\
+    Compass 5.20 deg, chaotic/cloud & \code{(2031, 11)} \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+\begin{frame}{Compass-Specific Files}
+  The compass-gait folders also include:
+
+  \begin{itemize}
+    \item \file{postimpact_states.npy}: physical post-impact states.
+    \item \file{postimpact_latent_z.npy}: encoded post-impact section points.
+    \item \file{postimpact_labels.npy}: cluster labels for the period diagnostic.
+  \end{itemize}
+
+  \vspace{0.5em}
+  These files support the incline-cascade interpretation:
+  period 2, period 4, period 8, and chaotic/cloud.
+\end{frame}
+
+\begin{frame}{Model Folder Anatomy}
+  Each folder in \file{models/} contains:
+
+  \begin{itemize}
+    \item \file{model.pt}: learned neural-network weights.
+    \item \file{config.json}: model/system settings used for that run.
+    \item \file{train_log.jsonl}: training log.
+    \item optional \file{console.*.log}: raw console output for some runs.
+  \end{itemize}
+
+  \vspace{0.5em}
+  The data can be used without loading the models. The models are included so
+  David can regenerate the data or modify export settings.
+\end{frame}
+
+\begin{frame}{Learned Objects}
+  CHyLL v2 learns three maps on the augmented mapping-cylinder state
+  \(y=(x,s)\in X'\):
+
+  \vspace{0.5em}
+  \begin{align*}
+    E_\theta &: X' \to \mathbb{R}^m && \text{encoder},\\
+    V_\theta &: \mathbb{R}^m \to \mathbb{R}^m && \text{latent vector field},\\
+    D_\theta &: \mathbb{R}^m \to X' && \text{decoder}.
+  \end{align*}
+
+  \vspace{0.3em}
+  Here \(m=7\) for rimless/bouncing and \(m=11\) for compass gait.
+\end{frame}
+
+\begin{frame}{Implementation Map}
+  \small
+  \begin{tabular}{ll}
+    \toprule
+    Mathematical object & Code location \\
+    \midrule
+    \(E_\theta, V_\theta, D_\theta\) & \file{chyll_v2/networks.py} \\
+    latent ODE rollout & \file{chyll_v2/ode.py} \\
+    loss terms \(L_x,L_z,L_g,L_v,L_c\) & \file{chyll_v2/losses.py} \\
+    training loop / checkpoint saving & \file{chyll_v2/train.py} \\
+    system simulators and reset maps & \file{chyll_v2/systems/} \\
+    export scripts & \file{cycling_signature/export/} \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.5em}
+  All paths here are relative to \file{source/chyll_v2/}.
+\end{frame}
+
+\begin{frame}{Forward Pass During Training}
+  For a sampled trajectory slice \(y_0,\ldots,y_{T-1}\):
+
+  \vspace{0.5em}
+  \begin{align*}
+    z_i &= E_\theta(y_i),\\
+    \widehat z_i &= \Psi_\theta(t_i; z_0), \qquad \dot z=V_\theta(z),\\
+    \widehat y_i &= D_\theta(\widehat z_i).
+  \end{align*}
+
+  \vspace{0.3em}
+  In code this is \code{forward_step(...)} in \file{train.py}: encode the
+  observed slice, integrate the Neural ODE, decode the integrated latent
+  trajectory, then call \code{compute_losses(...)}.
+\end{frame}
+
+\begin{frame}{Composite Loss}
+  The optimized objective is:
+
+  \vspace{0.5em}
+  \[
+    L = w_x L_x + w_z L_z + w_g L_g + w_v L_v + w_c L_c.
+  \]
+
+  \vspace{0.5em}
+  Included successful examples use:
+  \begin{itemize}
+    \item rimless/bouncing: \((w_x,w_z,w_g,w_v,w_c)=(1,1,3,1,1)\),
+    \item compass: \((w_x,w_z,w_g,w_v,w_c)=(1,1,3,0,1)\).
+  \end{itemize}
+
+  The exact values are in each \file{models/<case>/config.json}.
+\end{frame}
+
+\begin{frame}{What the Losses Enforce}
+  \scriptsize
+  \begin{tabular}{lll}
+    \toprule
+    Term & Mathematical role & Code helper \\
+    \midrule
+    \(L_x\) & \(D_\theta(\widehat z_i)\approx y_i\) reconstruction & \code{reconstruction_loss} \\
+    \(L_z\) & \(\Psi_\theta(t_i,E_\theta(y_0))\approx E_\theta(y_i)\) & \code{latent_consistency_loss} \\
+    \(L_g\) & contract reset/gluing pairs in latent space & \code{gluing_loss} \\
+    \(L_v\) & match pre/post seam velocities where enabled & \code{seam_velocity_loss} \\
+    \(L_c\) & keep latent coordinates from collapsing & \code{anti_collapse_loss} \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.7em}
+  \normalsize
+  The glue/seam masks are data-driven: they are inferred from the sampled
+  mapping-cylinder coordinate \(s\), not from symbolic guard equations.
+\end{frame}
+
+\begin{frame}{How the Learned Models Are Found}
+  \begin{itemize}
+    \item Training writes one run directory per successful case.
+    \item \file{model.pt} is the PyTorch \code{state_dict}.
+    \item \file{config.json} reconstructs dimensions, system parameters, loss weights,
+          and ODE/training settings.
+    \item \file{train_log.jsonl} records \(L_x,L_z,L_g,L_v,L_c\) over training.
+  \end{itemize}
+
+  \vspace{0.5em}
+  The handoff copies only the successful checkpoints into \file{models/}.
+\end{frame}
+
+\begin{frame}[fragile]{How the Export Script Uses a Model}
+  Each entry in \file{export_all_lifts.py} specifies:
+
+\begin{verbatim}
+"model": ROOT / "models" / <case> / "model.pt"
+"config": ROOT / "models" / <case> / "config.json"
+"script": ... / "prepare_*_lift.py"
+\end{verbatim}
+
+  The export script rebuilds the network from \file{config.json}, loads
+  \file{model.pt}, simulates the corresponding hybrid example, encodes it
+  with \(E_\theta\), computes tangents, and writes \file{regenerated/<case>/}.
+\end{frame}
+
+\begin{frame}{Three Levels of Use}
+  \begin{enumerate}
+    \item \textbf{Use existing data.}
+      Load \file{latent_lift_positions.npy} and \file{latent_lift_tangents.npy}.
+    \item \textbf{Regenerate lift data.}
+      Run \file{python export_all_lifts.py}.
+    \item \textbf{Inspect or modify model-derived exports.}
+      Edit only export parameters first; retraining is not needed for Thursday.
+  \end{enumerate}
+
+  \vspace{0.5em}
+  For Thursday, we should demo levels 1 and 2 and show where the model files
+  enter the regeneration step.
+\end{frame}
+
+\begin{frame}[fragile]{Loading Data in Python}
+  Minimal example:
+
+\begin{verbatim}
+import numpy as np
+
+case = "compass_period4_5p00deg_phi2"
+Z = np.load(f"data/{case}/latent_lift_positions.npy")
+T = np.load(f"data/{case}/latent_lift_tangents.npy")
+
+print(Z.shape)
+print(T.shape)
+\end{verbatim}
+
+  Here \code{Z} is the latent position array and \code{T} is the tangent array.
+\end{frame}
+
+\begin{frame}[fragile]{Loading Compass Post-Impact Data}
+  For compass-gait period/cascade analysis:
+
+\begin{verbatim}
+states = np.load(f"data/{case}/postimpact_states.npy")
+section_z = np.load(f"data/{case}/postimpact_latent_z.npy")
+labels = np.load(f"data/{case}/postimpact_labels.npy")
+
+print(states.shape)
+print(section_z.shape)
+print(labels.shape)
+\end{verbatim}
+
+  The labels are the cluster IDs used to count period-2, period-4, period-8,
+  or many/cloud behavior.
+\end{frame}
+
+\begin{frame}[fragile]{Loading CSV Files Instead}
+  If someone prefers CSV:
+
+\begin{verbatim}
+import numpy as np
+
+Z = np.loadtxt("data/rimless_wheel_phaseB/latent_lift_positions.csv")
+T = np.loadtxt("data/rimless_wheel_phaseB/latent_lift_tangents.csv")
+
+print(Z.shape)
+\end{verbatim}
+
+  The CSV files are space-delimited; use a space delimiter in any non-Python
+  tool.
+\end{frame}
+
+\begin{frame}{What the Export Script Does}
+  The script:
+  \begin{itemize}
+    \item loads each bundled \file{model.pt},
+    \item reads the matching \file{config.json},
+    \item simulates the appropriate hybrid trajectory,
+    \item encodes it into CHyLL v2 latent space,
+    \item computes tangent directions,
+    \item writes outputs to \file{regenerated/<case>/}.
+  \end{itemize}
+
+  \vspace{0.5em}
+  It does not retrain models. It only regenerates exported data.
+\end{frame}
+
+\begin{frame}[fragile]{Python Setup}
+  From the unzipped bundle folder:
+
+\begin{verbatim}
+python -m pip install -r requirements.txt
+\end{verbatim}
+
+  Then:
+
+\begin{verbatim}
+python export_all_lifts.py
+\end{verbatim}
+
+  This should create:
+
+\begin{verbatim}
+regenerated/rimless_wheel_phaseB/
+regenerated/bouncing_ball_phaseB_5impacts/
+...
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{The Role of \file{source/}}
+  \file{source/} contains the minimal CHyLL v2 code needed to reload models:
+
+  \begin{itemize}
+    \item network architecture,
+    \item system simulators,
+    \item lift exporters,
+    \item downstream helper scripts.
+  \end{itemize}
+
+  \vspace{0.5em}
+  It is included so David does not need to reconstruct the repo structure from
+  scratch just to regenerate the data.
+\end{frame}
+
+\begin{frame}{Rimless and Bouncing-Ball Tangents}
+  For rimless wheel and bouncing ball:
+
+  \begin{itemize}
+    \item exported tangents use tag-aware finite differences,
+    \item this differentiates within each arc/bridge piece,
+    \item it avoids artificial chords across concatenation boundaries.
+  \end{itemize}
+
+  \vspace{0.5em}
+  In the export script this corresponds to:
+
+  \begin{center}
+    \code{--tangent-source diff --tangent-mode tagaware}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Compass Tangents}
+  For the compass incline cascade:
+
+  \begin{itemize}
+    \item exported tangents use the learned latent vector field,
+    \item this matches the included files,
+    \item it is the tangent convention used for the current compass cascade data.
+  \end{itemize}
+
+  \vspace{0.5em}
+  In the export script this corresponds to:
+
+  \begin{center}
+    \code{--tangent-source vfield}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Downstream Computation Boundary}
+  Existing outputs are already included under:
+
+  \vspace{0.5em}
+  \begin{center}
+    \file{data/<case>/cycling_signature_outputs/}
+  \end{center}
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item The handoff responsibility is to provide clean positions, tangents,
+          and labels.
+    \item David can plug those arrays into his existing downstream workflow.
+    \item We do not need to explain or debug his downstream environment in the
+          main walkthrough.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Common Mistakes}
+  \begin{itemize}
+    \item Running commands from the wrong folder.
+    \item Forgetting quotes around paths with spaces.
+    \item Mixing old \file{data/compass_gait} files with CHyLL v2 files.
+    \item Using the wrong model with the wrong config.
+    \item Expecting \file{export_all_lifts.py} to train models.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Sanity Checks}
+  After loading data:
+
+  \begin{itemize}
+    \item positions and tangents should have the same shape,
+    \item tangent norms should be close to 1,
+    \item compass post-impact states should be \code{(256, 4)},
+    \item compass post-impact latent points should be \code{(256, 11)}.
+  \end{itemize}
+
+  \vspace{0.5em}
+  These checks are already done for the shipped bundle.
+\end{frame}
+
+\begin{frame}[fragile]{Tiny Python Sanity Check}
+\begin{verbatim}
+import numpy as np
+
+case = "rimless_wheel_phaseB"
+Z = np.load(f"data/{case}/latent_lift_positions.npy")
+T = np.load(f"data/{case}/latent_lift_tangents.npy")
+
+norms = np.linalg.norm(T, axis=1)
+print(Z.shape, T.shape)
+print(norms.min(), norms.max())
+\end{verbatim}
+
+  The min and max should both print very close to 1.
+\end{frame}
+
+\begin{frame}{Suggested Thursday Agenda}
+  \begin{enumerate}
+    \item Confirm everyone is using the successful-examples zip.
+    \item Walk through \file{examples.csv} and folder layout.
+    \item Load one \file{.npy} data file in Python.
+    \item Explain the learned maps and loss terms at the level of the code.
+    \item Regenerate one example using \file{export_all_lifts.py}.
+    \item Explain the cycling-signature output folders.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Live Demo Plan}
+  Recommended demo order:
+
+  \begin{enumerate}
+    \item Open the zip folder.
+    \item Open \file{README.md}.
+    \item Open \file{examples.csv}.
+    \item Load \file{data/compass_period4_5p00deg_phi2/latent_lift_positions.npy}.
+    \item Run \file{python export_all_lifts.py}.
+    \item Compare \file{data/} and \file{regenerated/}.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{What David Can Safely Modify}
+  \begin{itemize}
+    \item Which example/case to process.
+    \item Cycling-signature parameters.
+    \item Number and length of random subsegments.
+    \item Export destination folder.
+    \item Whether to use existing data or regenerated data.
+  \end{itemize}
+
+  \vspace{0.5em}
+  He should not need to retrain models for the immediate downstream task.
+\end{frame}
+
+\begin{frame}{Best Follow-Up Deliverable}
+  After the meeting, it would be useful to send:
+
+  \begin{itemize}
+    \item the final zip,
+    \item this slide deck,
+    \item a one-paragraph note saying which examples are successful,
+    \item and the exact command David should run first.
+  \end{itemize}
+
+  \vspace{0.5em}
+  First command:
+  \begin{center}
+    \code{python export_all_lifts.py}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Summary}
+  \begin{itemize}
+    \item The zip is a clean successful-examples bundle.
+    \item Data can be used immediately from \file{data/}.
+    \item Models and source are included for regeneration.
+    \item \file{export_all_lifts.py} is the easiest entry point.
+    \item Downstream outputs are included for comparison; David can rerun them
+          in his own workflow.
+  \end{itemize}
+\end{frame}
+
+\end{document}

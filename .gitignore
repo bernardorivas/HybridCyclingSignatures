@@ -1,3 +1,26 @@
+# Python environments / caches
+.venv/
 venv/
 __pycache__/
+*.pyc
+
+# Local Claude/Codex files
+.claude/
+
+# Generated outputs / large experiment artifacts
+data/
+figures/
+runs/
 scripts/temp/
+
+# LaTeX build junk
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.fdb_latexmk
+*.fls
+*.synctex.gz

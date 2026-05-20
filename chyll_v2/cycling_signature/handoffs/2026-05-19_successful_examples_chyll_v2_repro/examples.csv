@@ -1,0 +1,8 @@
+folder,system,case,behavior_or_note,model_folder,primary_lift_shape
+rimless_wheel_phaseB,rimless_wheel,phaseB_finetune,stable limit cycle,models/rimless_wheel_phaseB,"(960, 7)"
+bouncing_ball_phaseB_5impacts,bouncing_ball,phaseB_finetune_5_impacts,successful 5-impact lift,models/bouncing_ball_phaseB,"(1069, 7)"
+bouncing_ball_phaseB_15impacts,bouncing_ball,phaseB_finetune_15_impacts,successful 15-impact lift,models/bouncing_ball_phaseB,"(2004, 7)"
+compass_period2_4p75deg_phi1,compass_gait,incline_4.75_deg,period 2,models/compass_period2_4p75deg_phi1,"(2032, 11)"
+compass_period4_5p00deg_phi2,compass_gait,incline_5.00_deg,period 4,models/compass_period4_5p00deg_phi2,"(2036, 11)"
+compass_period8_5p02deg_phi3,compass_gait,incline_5.02_deg,period 8,models/compass_period8_5p02deg_phi3,"(2036, 11)"
+compass_chaotic_cloud_5p20deg_phi4,compass_gait,incline_5.20_deg,chaotic/cloud,models/compass_chaotic_cloud_5p20deg_phi4,"(2031, 11)"
