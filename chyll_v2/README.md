@@ -40,19 +40,40 @@ chyll_v2/
 
 ## Training
 
-Each system has one training script. It writes the model, its configuration,
-and a training log to `runs/<name>/`, and loss and rollout figures to
-`figures/<name>/`.
+Every run writes its model, configuration, and training log to `runs/<name>/`,
+and loss and rollout figures to `figures/<name>/`.
+
+The rimless wheel and bouncing ball train in two phases. Phase A trains from a
+random start. Phase B reloads the Phase-A model and fine-tunes it on a shorter
+schedule with the seam-velocity loss enabled (`--w-v 1.0`). The models kept in
+this repository are the Phase-B results, so reproducing them takes both steps:
 
 ```bash
+# Rimless wheel: Phase A, then Phase B fine-tuned from the Phase-A model
 python chyll_v2/scripts/train_rimless.py
-python chyll_v2/scripts/train_bouncing_ball.py
-python chyll_v2/scripts/train_compass.py
+python chyll_v2/scripts/train_rimless.py \
+  --load-from chyll_v2/runs/rimless_wheel/model.pt --w-v 1.0 \
+  --curriculum-horizons 50,100 --steps-per-horizon 500 \
+  --run-dir chyll_v2/runs/rimless_wheel_phaseB_finetune \
+  --figure-dir chyll_v2/figures/rimless_wheel_phaseB_finetune
 ```
 
-The compass-gait period-doubling cascade is studied separately. This script
-clusters the learned latent states at a sequence of slopes and reports how
-many distinct gait patterns each slope produces:
+The bouncing ball follows the same two steps with `train_bouncing_ball.py`:
+Phase A with `--w-v 0 --run-dir chyll_v2/runs/bouncing_ball_phaseA_wv0`, then
+Phase B fine-tuning from that model into `bouncing_ball_phaseB_finetune`.
+
+The compass-gait biped trains in a single phase, one command per slope. Each
+slope is one gait in the period-doubling cascade:
+
+```bash
+python chyll_v2/scripts/train_compass.py --slope-config phi_1        # period 2
+python chyll_v2/scripts/train_compass.py --slope-config phi_2        # period 4
+python chyll_v2/scripts/train_compass.py --slope-config phi_3        # period 8
+python chyll_v2/scripts/train_compass.py --slope-config phi_4_cloud  # chaotic
+```
+
+Once the compass runs exist, this script clusters their learned latent states
+and reports how many distinct gaits each slope produces:
 
 ```bash
 python chyll_v2/scripts/analyze_compass_cascade.py
