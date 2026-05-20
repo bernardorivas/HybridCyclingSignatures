@@ -1,0 +1,265 @@
+\documentclass[10pt,aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{dolphin}
+\usefonttheme{professionalfonts}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{tikz-cd}
+
+\definecolor{deepblue}{RGB}{0,70,130}
+\setbeamercolor{title}{fg=deepblue}
+\setbeamercolor{frametitle}{fg=deepblue}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize items}[circle]
+
+\newcommand{\code}[1]{\texttt{\small\detokenize{#1}}}
+
+\title[CHyLL v2]{CHyLL v2: Continuous Latent Embeddings of Hybrid Systems}
+\subtitle{What the model learns, and what each loss term enforces}
+\author{Kaito Iwasaki}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Hybrid Dynamical Systems}
+  A \emph{hybrid} dynamical system mixes smooth motion with sudden jumps.
+
+  \vspace{0.8em}
+  \begin{itemize}
+    \item A walking robot: the swing leg moves smoothly, then strikes the
+      ground and the state jumps.
+    \item A bouncing ball: free flight under gravity, then an instantaneous
+      change of velocity at each impact.
+  \end{itemize}
+
+  \vspace{0.8em}
+  The jump is a genuine discontinuity. A smooth model of the dynamics cannot
+  be fitted directly across it.
+\end{frame}
+
+\begin{frame}{Three Example Systems}
+  \begin{center}
+  \begin{tabular}{lcl}
+    \toprule
+    System & State dim. & Behavior \\
+    \midrule
+    Rimless wheel & 2 & stable rolling limit cycle \\
+    Bouncing ball & 2 & bounces, losing energy at each impact \\
+    Compass-gait biped & 4 & period-doubling route to chaos \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{1em}
+  They increase in difficulty. The compass-gait biped walks with period 1,
+  then 2, 4, 8, and finally chaotically as the ground slope steepens.
+\end{frame}
+
+\begin{frame}{The Idea}
+  Replace the discontinuous system with a continuous one that is easy to model.
+
+  \vspace{0.8em}
+  \begin{itemize}
+    \item An \textbf{encoder} maps each state into a latent space.
+    \item A single \textbf{smooth vector field} advances the latent state in
+      time.
+    \item A \textbf{decoder} maps the latent state back.
+  \end{itemize}
+
+  \vspace{0.8em}
+  The jump is absorbed into the smooth latent flow. This follows Teng, Liu,
+  and Sreenath (ICML 2026).
+\end{frame}
+
+\begin{frame}{The Mapping-Cylinder State Space}
+  To make the jump continuous, the state is augmented with one extra
+  coordinate \(s \in [0,1]\):
+  \[
+    y = (x, s) \in X'.
+  \]
+
+  \begin{itemize}
+    \item \(s = 0\): ordinary motion of the original system.
+    \item \(s\) sweeping \(0 \to 1\): the jump, unrolled as a continuous path.
+  \end{itemize}
+
+  \vspace{0.6em}
+  On \(X'\) the trajectory is continuous, so a smooth latent model can be fitted
+  to it.
+\end{frame}
+
+\begin{frame}{The Learned Maps}
+  CHyLL v2 learns three maps on the augmented state \(y = (x,s) \in X'\):
+
+  \vspace{0.6em}
+  \begin{align*}
+    E_\theta &: X' \to \mathbb{R}^m && \text{encoder},\\
+    V_\theta &: \mathbb{R}^m \to \mathbb{R}^m && \text{latent vector field},\\
+    D_\theta &: \mathbb{R}^m \to X' && \text{decoder}.
+  \end{align*}
+
+  \vspace{0.4em}
+  The latent dimension is \(m = 7\) for the rimless wheel and bouncing ball,
+  and \(m = 11\) for the compass-gait biped.
+\end{frame}
+
+\begin{frame}{Training: The Forward Pass}
+  For a sampled trajectory slice \(y_0, \ldots, y_{T-1}\):
+
+  \vspace{0.5em}
+  \begin{align*}
+    z_i &= E_\theta(y_i),\\
+    \widehat z_i &= \Psi_{i\tau}(z_0), \qquad \dot z = V_\theta(z),\\
+    \widehat y_i &= D_\theta(\widehat z_i).
+  \end{align*}
+
+  \vspace{0.4em}
+  Each state is encoded, the latent flow is integrated forward, and the
+  integrated latent trajectory is decoded. The loss compares the encoded
+  \(z_i\), the integrated \(\widehat z_i\), and the decoded \(\widehat y_i\)
+  against the data.
+\end{frame}
+
+\begin{frame}{The Commutative Diagram}
+  Write \(\Phi_\tau\) for one time-\(\tau\) step of the system on \(X'\), and
+  \(\Psi_\tau\) for the time-\(\tau\) flow of \(\dot z = V_\theta(z)\).
+
+  \vspace{0.6em}
+  \begin{center}
+  \begin{tikzcd}[row sep=3.6em, column sep=5.5em]
+    X' \arrow[r, "\Phi_\tau"] \arrow[d, "E_\theta"'] &
+    X' \arrow[d, shift left=1ex, "E_\theta"] \\
+    \mathbb{R}^m \arrow[r, "\Psi_\tau"'] &
+    \mathbb{R}^m \arrow[u, shift left=1ex, "D_\theta"]
+  \end{tikzcd}
+  \end{center}
+
+  \vspace{0.4em}
+  A faithful embedding makes this diagram commute:
+  \begin{itemize}
+    \item \(L_z\) forces the square to commute:
+      \(\Psi_\tau(E_\theta y) = E_\theta(\Phi_\tau y)\).
+    \item \(L_x\) forces the decoder to recover the state:
+      \(D_\theta(\widehat z_i) = y_i\).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The Mapping-Cylinder Seam}
+  The diagram fixes the dynamics. Three more terms handle the hybrid
+  structure, at the seam where \(s\) wraps from \(1\) back to \(0\):
+
+  \vspace{0.6em}
+  \begin{itemize}
+    \item \(L_g\): the two sides of a reset map to the \emph{same} latent
+      point, so the encoder respects the gluing.
+    \item \(L_v\): the latent velocity has no kink crossing a seam.
+    \item \(L_c\): the encoder keeps all \(m\) latent coordinates active and
+      does not collapse them.
+  \end{itemize}
+
+  \vspace{0.6em}
+  These seams are detected from the sampled coordinate \(s\) in the data, not
+  from symbolic guard equations.
+\end{frame}
+
+\begin{frame}{What Each Loss Term Enforces}
+  \small
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Term & Enforces & Code helper \\
+    \midrule
+    \(L_x\) & decoder recovers the state & \code{reconstruction_loss} \\
+    \(L_z\) & encode/flow square commutes & \code{latent_consistency_loss} \\
+    \(L_g\) & reset pairs share a latent point & \code{gluing_loss} \\
+    \(L_v\) & latent velocity continuous at seams & \code{seam_velocity_loss} \\
+    \(L_c\) & latent coordinates do not collapse & \code{anti_collapse_loss} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.8em}
+  \normalsize
+  \(L_x\) and \(L_z\) are the two commutative-diagram conditions. \(L_g\),
+  \(L_v\), and \(L_c\) are the extra conditions specific to the hybrid
+  mapping-cylinder structure.
+\end{frame}
+
+\begin{frame}{The Composite Objective}
+  \[
+    L = w_x L_x + w_z L_z + w_g L_g + w_v L_v + w_c L_c.
+  \]
+
+  \vspace{0.8em}
+  \begin{center}
+  \begin{tabular}{lc}
+    \toprule
+    Setting & \((w_x, w_z, w_g, w_v, w_c)\) \\
+    \midrule
+    Rimless wheel, bouncing ball & \((1,\ 1,\ 3,\ 1,\ 1)\) \\
+    Compass-gait biped & \((1,\ 1,\ 3,\ 0,\ 1)\) \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.8em}
+  The exact values for any run are stored in its \code{config.json}.
+\end{frame}
+
+\begin{frame}{Results}
+  \begin{itemize}
+    \item \textbf{Rimless wheel.} The model reproduces the rolling limit cycle,
+      and the learned embedding recovers its expected single topological cycle.
+    \item \textbf{Compass-gait biped.} The cascade analysis recovers the
+      period-doubling sequence exactly: the learned latent states form 2, 4,
+      and 8 clusters at the period-2, -4, and -8 gaits, and disperse under
+      chaos.
+    \item \textbf{Bouncing ball.} The orbit spirals slowly toward rest rather
+      than closing into a loop, so its topological signature is only partially
+      recovered.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Where the Code Lives}
+  \small
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Object & File \\
+    \midrule
+    \(E_\theta, V_\theta, D_\theta\) & \code{networks.py} \\
+    latent ODE rollout & \code{ode.py} \\
+    loss terms \(L_x, L_z, L_g, L_v, L_c\) & \code{losses.py} \\
+    training loop & \code{train.py} \\
+    system simulators and reset maps & \code{systems/} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.7em}
+  \normalsize
+  These files are the CHyLL v2 core library, under \code{chyll_v2/chyll_v2/}.
+  Topology postprocessing lives under \code{chyll_v2/cycling_signature/}.
+\end{frame}
+
+\begin{frame}{Summary}
+  \begin{itemize}
+    \item A hybrid system is made continuous on the mapping cylinder \(X'\).
+    \item CHyLL v2 learns an encoder, a latent vector field, and a decoder.
+    \item \(L_z\) and \(L_x\) make the encode/flow/decode diagram commute.
+    \item \(L_g\), \(L_v\), and \(L_c\) enforce the hybrid seam structure.
+    \item The learned embeddings recover the expected topology for the rimless
+      wheel and the compass-gait cascade.
+  \end{itemize}
+\end{frame}
+
+\end{document}
