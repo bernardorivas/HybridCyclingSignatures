@@ -33,10 +33,8 @@ DEFAULT_OUT_DIR = (
     REPO_ROOT / "chyll_v2" / "cycling_signature" / "data" / "rimless_wheel"
 )
 DEFAULT_BASES = (
-    "continuous_lift_chyll_v2_tagaware",
-    "continuous_lift_chyll_v2_vfield",
-    "continuous_lift_chyll_v2_wv1_tagaware",
-    "continuous_lift_chyll_v2_wv1_vfield",
+    "continuous_lift_chyll_v2_phaseB",
+    "continuous_lift_chyll_v2_phaseB_vfield",
 )
 
 
@@ -262,7 +260,7 @@ def main() -> int:
     parser.add_argument(
         "--config",
         type=Path,
-        default=REPO_ROOT / "chyll_v2" / "runs" / "rimless_wheel" / "config.json",
+        default=REPO_ROOT / "chyll_v2" / "runs" / "rimless_wheel_phaseB_finetune" / "config.json",
     )
     parser.add_argument("--n-impacts", type=int, default=5)
     parser.add_argument("--n-s", type=int, default=50)
