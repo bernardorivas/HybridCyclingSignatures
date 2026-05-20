@@ -53,7 +53,7 @@ julia --project="time series/cycling_signature" \
 **3. Plot** the rank distribution and heatmaps:
 
 ```bash
-python chyll_v2/cycling_signature/plot/plot_rimless_signature_figures.py
+python chyll_v2/cycling_signature/plot/plot_signature_figures.py
 ```
 
 ## Results

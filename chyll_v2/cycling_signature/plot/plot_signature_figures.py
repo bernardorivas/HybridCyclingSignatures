@@ -1,9 +1,11 @@
-"""Manuscript-grade cycling-signature figures for the rimless CHyLL v2 run.
+"""Cycling-signature figures from random-subsegment summaries.
 
-This builds two figures from the random-subsegment summaries:
+Works for any system. The data directory, file prefixes, output names, and
+radius scale are all command-line arguments, with rimless-wheel defaults.
 
-1. fixed-radius rank distributions, following the style of David et al. Fig. 10;
-2. radius-sensitive rank heatmaps, following the style of David et al. Fig. 15.
+Builds two figures: fixed-radius rank distributions in the style of David
+et al. Figure 10, and radius-sensitive rank heatmaps in the style of David
+et al. Figure 15.
 """
 from __future__ import annotations
 
