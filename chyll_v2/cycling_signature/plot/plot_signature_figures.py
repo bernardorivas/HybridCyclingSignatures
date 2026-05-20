@@ -318,10 +318,10 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_FIG_DIR)
-    parser.add_argument("--diff-prefix", default="subsegments_chyll_v2_diff_zoom100")
-    parser.add_argument("--flow-prefix", default="subsegments_chyll_v2_vfield_zoom100")
-    parser.add_argument("--rank-out-base", default="fig_rimless_signature_rank_distribution")
-    parser.add_argument("--heatmap-out-base", default="fig_rimless_signature_rank_heatmaps")
+    parser.add_argument("--diff-prefix", default="subsegments_chyll_v2_phaseB_diff")
+    parser.add_argument("--flow-prefix", default="subsegments_chyll_v2_phaseB_vfield")
+    parser.add_argument("--rank-out-base", default="fig_rimless_phaseB_rank_distribution")
+    parser.add_argument("--heatmap-out-base", default="fig_rimless_phaseB_rank_heatmaps")
     parser.add_argument(
         "--radius-scale", type=float, default=1e3,
         help=(
