@@ -56,7 +56,7 @@
       "phi": 0.09075712110370514,
       "expected_period": null,
       "fixed_points": [],
-      "sampling_cloud_path": "chyll_v2/data/compass_gait/phi_4_return_cloud.npy",
+      "sampling_cloud_path": "chyll_v2/compass_analysis/compass_gait/phi_4_return_cloud.npy",
       "sampling_box": null,
       "ic_sigma": 0.0,
       "project_to_post_impact_guard": true,

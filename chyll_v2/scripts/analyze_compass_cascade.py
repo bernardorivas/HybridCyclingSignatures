@@ -263,7 +263,7 @@ def main() -> int:
     parser.add_argument(
         "--data-dir",
         type=Path,
-        default=REPO_ROOT / "chyll_v2" / "data" / "compass_gait_cascade",
+        default=REPO_ROOT / "chyll_v2" / "compass_analysis" / "compass_gait_cascade",
     )
     parser.add_argument("--n-burn", type=int, default=32)
     parser.add_argument("--n-keep", type=int, default=256)

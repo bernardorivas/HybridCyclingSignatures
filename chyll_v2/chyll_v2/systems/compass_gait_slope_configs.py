@@ -96,7 +96,7 @@ GOSWAMI_COMPASS_SLOPE_CONFIGS: dict[str, CompassGaitSlopeConfig] = {
         phi_deg=5.20,
         phi=radians(5.20),
         expected_period=None,
-        sampling_cloud_path="chyll_v2/data/compass_gait/phi_4_return_cloud.npy",
+        sampling_cloud_path="chyll_v2/compass_analysis/compass_gait/phi_4_return_cloud.npy",
         ic_sigma=0.0,
         source_note=(
             "Goswami 1998 Fig. 10d chaotic gait; ICs sampled from an "
