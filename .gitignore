@@ -8,10 +8,54 @@ __pycache__/
 .claude/
 
 # Generated outputs / large experiment artifacts
-data/
-figures/
-runs/
+/data/
+/figures/
+/runs/
 scripts/temp/
+
+# Smoke-test runs (any *_smoke/ directory, anywhere in the tree)
+**/*_smoke/
+
+# Handoff snapshots — kept local. The unzipped tree has Windows-incompatible
+# long paths; the zip mirrors content that contains embedded absolute paths
+# (machine-specific metadata.txt files). Push neither.
+chyll_v2/cycling_signature/handoffs/*/
+chyll_v2/cycling_signature/handoffs/*.zip
+
+# One-shot helper script (used to scrub local paths from metadata files)
+/sanitize_local_paths.py
+
+# Superseded chyll_v2 model runs (kept locally, not pushed)
+# Canonical keepers: *_phaseB_finetune (rimless, bouncing_ball) + compass_gait_*
+chyll_v2/runs/rimless_wheel/
+chyll_v2/runs/rimless_wheel_wv1/
+chyll_v2/runs/rimless_wheel_wv1_twoseam/
+chyll_v2/runs/bouncing_ball_phaseA_wv0/
+chyll_v2/runs/bouncing_ball_wv1_twoseam/
+chyll_v2/runs/bouncing_ball_alpha1_wv1_twoseam/
+chyll_v2/runs/compass_gait_uniformIC_phaseA_failed/
+chyll_v2/figures/compass_gait_diagnostic/
+chyll_v2/figures/rimless_wheel/
+chyll_v2/figures/rimless_wheel_wv1/
+chyll_v2/figures/rimless_wheel_wv1_twoseam/
+chyll_v2/figures/bouncing_ball_phaseA_wv0/
+chyll_v2/figures/bouncing_ball_wv1_twoseam/
+chyll_v2/figures/bouncing_ball_alpha1_wv1_twoseam/
+chyll_v2/figures/compass_gait_uniformIC_phaseA_failed/
+
+# Orphan downstream artifacts (rimless + bouncing_ball): keep only *phaseB* files
+chyll_v2/cycling_signature/data/rimless_wheel/**
+!chyll_v2/cycling_signature/data/rimless_wheel/
+!chyll_v2/cycling_signature/data/rimless_wheel/*phaseB*
+chyll_v2/cycling_signature/data/bouncing_ball/**
+!chyll_v2/cycling_signature/data/bouncing_ball/
+!chyll_v2/cycling_signature/data/bouncing_ball/*phaseB*
+chyll_v2/cycling_signature/figures/rimless_wheel/**
+!chyll_v2/cycling_signature/figures/rimless_wheel/
+!chyll_v2/cycling_signature/figures/rimless_wheel/*phaseB*
+chyll_v2/cycling_signature/figures/bouncing_ball/**
+!chyll_v2/cycling_signature/figures/bouncing_ball/
+!chyll_v2/cycling_signature/figures/bouncing_ball/*phaseB*
 
 # LaTeX build junk
 *.aux

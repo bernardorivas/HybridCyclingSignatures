@@ -1,0 +1,24 @@
+CHyLL v2 rimless cycling-signature export
+================================================
+model: chyll_v2\runs\rimless_wheel_phaseB_finetune\model.pt
+latent_dim: 7
+lift shape: (960, 7)
+tangent_source: diff:tagaware
+tiny tangent repairs: 0
+
+Reconstruction D(E(x,s)) vs augmented input
+  all:     mean=9.761e-02 median=3.053e-02 p95=4.224e-01 max=7.793e-01
+  arcs:    mean=1.101e-01 median=4.001e-02 p95=4.181e-01 max=7.793e-01
+  bridges: mean=6.215e-02 median=2.100e-02 p95=4.224e-01 max=6.412e-01
+
+Symbolic gluing errors ||E(g,1)-E(r(g),0)||
+  mean=4.579e-02 median=4.580e-02 p95=4.580e-02 max=4.580e-02
+
+Latent coordinate ranges
+  z0: [-0.158484, 1.4255] span=1.58399
+  z1: [0.15026, 1.69161] span=1.54135
+  z2: [-1.22354, 0.336622] span=1.56016
+  z3: [-0.184527, 1.35199] span=1.53651
+  z4: [-0.204151, 1.33586] span=1.54001
+  z5: [-1.34569, 0.186011] span=1.5317
+  z6: [-0.182725, 1.36081] span=1.54354

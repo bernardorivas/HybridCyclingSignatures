@@ -1,0 +1,19 @@
+CHyLL v2 subsegment cycling-signature experiment
+base=continuous_lift_compass_phi2_vfield
+positions=chyll_v2\cycling_signature\data\compass_gait_cascade_beta1\continuous_lift_compass_phi2_vfield_positions.csv
+tangents=chyll_v2\cycling_signature\data\compass_gait_cascade_beta1\continuous_lift_compass_phi2_vfield_tangents.csv
+dim=11
+samples=2036
+boxsize=0.3
+sb_radius=1
+C=0.3
+beta1_Y=1
+r_max=0.5
+r_subdivisions=101
+eval_radius=0.05
+segment_lengths=20
+n_runs=1
+seed=20260512
+parallel_inner=false
+max_rank=1
+max_spaces=8

@@ -11,14 +11,12 @@ a 6-term loss derived from a commutative diagram:
 `L_dyn + L_glue + L_rec + L_seam + L_conf + L_coll`.
 
 The work is being compared against Teng, Liu, Sreenath (ICML 2026)
-*Embedding Hybrid Systems into Continuous Latent Vector Fields*. PDF at
-`local_docs/Learning_Cycling_Signatures_of_Hybrid_Systems/hybrid_cyclingsignatures/references/Sangli-ICML-Fed.18 (1).pdf`.
+*Embedding Hybrid Systems into Continuous Latent Vector Fields*.
 
-The older CHyLL 2025 version (Teng et al. 2025) of that paper is at the same
-path under `CHyLL.pdf`. The 2025 paper had a conformal loss similar to our
-`L_conf`; the 2026 paper replaced it with a velocity-compatibility loss `L_v`
-and then showed via ablation that `L_v` is itself redundant under network
-Lipschitz continuity.
+The older CHyLL 2025 version (Teng et al. 2025) of that paper had a conformal
+loss similar to our `L_conf`; the 2026 paper replaced it with a
+velocity-compatibility loss `L_v` and then showed via ablation that `L_v` is
+itself redundant under network Lipschitz continuity.
 
 ## Goal
 
@@ -253,11 +251,5 @@ necessarily the Neural-ODE vector field itself.
 - The Lipschitz-threshold gluing detector that Sangli uses for the hybrifold
   setting is unnecessary on the cylinder — we have `G` and `r` symbolically.
   `chyll_v2/chyll_v2/data.py:GuardSampler` draws fresh `g ∈ G` each step.
-- The user is a math-journal author, terse-direct, decisive-scope. Prefers
-  structured phased plans with checkpoints, dislikes uncontrolled scope
-  creep. The Section-4 baseline in `src/` is frozen; `chyll_v2/` is the
+- The Section-4 baseline in `src/` is frozen; `chyll_v2/` is the
   comparison arm.
-- Auto-memory index at
-  `C:\Users\roger\.claude\projects\c--Users-roger-OneDrive---Umich-Kaito-Iwasaki-The-Vault-Research-2026-HybridCyclingSignatures\memory\MEMORY.md`
-  points to deeper project context including referee report, scope notes,
-  collaborator channels, and Windows/OneDrive gotchas.

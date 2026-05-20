@@ -1,0 +1,5 @@
+label,phi_deg,phi_rad,expected_period,latent_diameter,dbscan_eps,cluster_count,cluster_display,noise_count,section_crossings_per_loop,run_dir
+phi_1,4.75,0.08290313946973066,2,0.09344487637281418,0.0009344487637281418,2,2,0,2,chyll_v2\runs\compass_gait_phi_1_4.75deg
+phi_2,5.0,0.08726646259971647,4,0.12400873005390167,0.0012400873005390168,4,4,0,4,chyll_v2\runs\compass_gait_phi_2_5deg
+phi_3,5.02,0.08761552845011533,8,0.13768193125724792,0.0013768193125724792,8,8,0,8,chyll_v2\runs\compass_gait_phi_3_5.02deg
+phi_4_cloud,5.2,0.09075712110370514,chaos,0.1795147955417633,0.001795147955417633,20,many,65,many,chyll_v2\runs\compass_gait_phi_4_cloud_5.2deg

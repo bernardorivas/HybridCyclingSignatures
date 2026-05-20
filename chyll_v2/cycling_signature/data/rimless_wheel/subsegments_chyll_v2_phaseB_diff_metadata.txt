@@ -1,0 +1,19 @@
+CHyLL v2 subsegment cycling-signature experiment
+base=continuous_lift_chyll_v2_phaseB
+positions=chyll_v2\cycling_signature\data\rimless_wheel\continuous_lift_chyll_v2_phaseB_positions.csv
+tangents=chyll_v2\cycling_signature\data\rimless_wheel\continuous_lift_chyll_v2_phaseB_tangents.csv
+dim=7
+samples=960
+boxsize=0.3
+sb_radius=1
+C=0.3
+beta1_Y=1
+r_max=0.002
+r_subdivisions=161
+eval_radius=0.001
+segment_lengths=20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300
+n_runs=100
+seed=20260512
+parallel_inner=false
+max_rank=1
+max_spaces=8

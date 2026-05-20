@@ -1,8 +1,7 @@
 # chyll_v2
 
 Standalone reimplementation of Teng, Liu, Sreenath (ICML 2026), *Embedding
-Hybrid Systems into Continuous Latent Vector Fields*
-(`local_docs/.../references/Sangli-ICML-Fed.18 (1).pdf`).
+Hybrid Systems into Continuous Latent Vector Fields*.
 
 This directory is an **experimental baseline** built from scratch to compare
 against the suspension/mapping-cylinder pipeline in `src/`. It does not import

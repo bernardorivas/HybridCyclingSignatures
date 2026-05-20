@@ -1,0 +1,19 @@
+CHyLL v2 subsegment cycling-signature experiment
+base=circle_2d_r5_n1001
+positions=chyll_v2\cycling_signature\data\sanity_circle\circle_2d_r5_n1001_positions.csv
+tangents=chyll_v2\cycling_signature\data\sanity_circle\circle_2d_r5_n1001_tangents.csv
+dim=2
+samples=1001
+boxsize=3.0
+sb_radius=2
+C=6.0
+beta1_Y=1
+r_max=5.0
+r_subdivisions=101
+eval_radius=2.5
+segment_lengths=50,100,150,200,250,300,350,400,450,500
+n_runs=10
+seed=20260512
+parallel_inner=false
+max_rank=1
+max_spaces=8

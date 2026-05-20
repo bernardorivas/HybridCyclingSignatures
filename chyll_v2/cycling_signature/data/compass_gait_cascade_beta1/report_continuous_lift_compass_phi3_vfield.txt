@@ -1,0 +1,28 @@
+CHyLL v2 rimless cycling-signature export
+================================================
+model: chyll_v2\runs\compass_gait_phi_3_5.02deg\model.pt
+latent_dim: 11
+lift shape: (2036, 11)
+tangent_source: vfield
+tiny tangent repairs: 0
+
+Reconstruction D(E(x,s)) vs augmented input
+  all:     mean=1.973e-01 median=5.431e-02 p95=9.226e-01 max=2.505e+00
+  arcs:    mean=2.297e-01 median=5.249e-02 p95=2.055e+00 max=2.505e+00
+  bridges: mean=1.472e-01 median=5.642e-02 p95=4.677e-01 max=1.734e+00
+
+Symbolic gluing errors ||E(g,1)-E(r(g),0)||
+  mean=9.362e-02 median=9.225e-02 p95=1.033e-01 max=1.033e-01
+
+Latent coordinate ranges
+  z0: [-0.289501, 1.60201] span=1.89151
+  z1: [-1.79628, 0.0688705] span=1.86515
+  z2: [-1.46038, 0.991808] span=2.45218
+  z3: [-3.00243, -1.03855] span=1.96388
+  z4: [-0.367188, 1.79259] span=2.15977
+  z5: [-0.194642, 1.70568] span=1.90032
+  z6: [-1.76902, 0.155719] span=1.92474
+  z7: [-0.170403, 1.7025] span=1.8729
+  z8: [-1.70482, 0.1728] span=1.87762
+  z9: [-0.189503, 1.75935] span=1.94885
+  z10: [-0.172665, 1.73258] span=1.90525

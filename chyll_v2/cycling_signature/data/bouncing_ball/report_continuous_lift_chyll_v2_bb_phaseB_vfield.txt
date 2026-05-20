@@ -1,0 +1,24 @@
+CHyLL v2 rimless cycling-signature export
+================================================
+model: chyll_v2\runs\bouncing_ball_phaseB_finetune\model.pt
+latent_dim: 7
+lift shape: (1069, 7)
+tangent_source: vfield
+tiny tangent repairs: 0
+
+Reconstruction D(E(x,s)) vs augmented input
+  all:     mean=9.112e-02 median=2.768e-02 p95=4.908e-01 max=1.569e+00
+  arcs:    mean=6.691e-02 median=2.344e-02 p95=3.216e-01 max=1.083e+00
+  bridges: mean=1.704e-01 median=4.303e-02 p95=9.333e-01 max=1.569e+00
+
+Symbolic gluing errors ||E(g,1)-E(r(g),0)||
+  mean=1.418e-02 median=1.307e-02 p95=1.721e-02 max=1.724e-02
+
+Latent coordinate ranges
+  z0: [-0.0025902, 2.08711] span=2.0897
+  z1: [-2.33508, -0.289707] span=2.04537
+  z2: [-0.143117, 1.67783] span=1.82094
+  z3: [-1.82525, 0.0531953] span=1.87845
+  z4: [-1.86542, 0.0696577] span=1.93507
+  z5: [-0.00918053, 1.97506] span=1.98424
+  z6: [-1.81115, 0.0817421] span=1.8929

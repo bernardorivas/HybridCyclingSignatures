@@ -1,0 +1,19 @@
+CHyLL v2 subsegment cycling-signature experiment
+base=continuous_lift_chyll_v2_bb_phaseB_vfield
+positions=chyll_v2\cycling_signature\data\bouncing_ball\continuous_lift_chyll_v2_bb_phaseB_vfield_positions.csv
+tangents=chyll_v2\cycling_signature\data\bouncing_ball\continuous_lift_chyll_v2_bb_phaseB_vfield_tangents.csv
+dim=7
+samples=1069
+boxsize=0.3
+sb_radius=1
+C=0.3
+beta1_Y=2
+r_max=0.5
+r_subdivisions=200
+eval_radius=0.05
+segment_lengths=50,75,100,125,150,175,200,225,250,275,300,325,350,375,400,425,450,475,500,525,550,575,600
+n_runs=200
+seed=20260512
+parallel_inner=false
+max_rank=1
+max_spaces=8
