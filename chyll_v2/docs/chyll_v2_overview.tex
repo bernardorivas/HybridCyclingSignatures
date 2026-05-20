@@ -202,12 +202,14 @@
   well-behaved.
 
   \medskip
-  \textbf{Seam velocity.}\quad With \(z_k = E_\theta(y_k)\) and step \(\tau\),
+  \textbf{Seam velocity.}\quad The seam set \(\mathcal{S}\) is the union of
+  the cylinder-entry seams and the gluing-exit seams. With
+  \(z_k = E_\theta(y_k)\) and step \(\tau\),
   \[ L_v = \frac{1}{|\mathcal{S}|}\sum_{k\in\mathcal{S}}
      \Big\lVert \frac{z_k - z_{k-1}}{\tau}
        - \frac{z_{k+2} - z_{k+1}}{\tau}\Big\rVert^2 . \]
-  \(L_v = 0\) matches the latent velocity just before and just after a seam,
-  so the latent curve is \(C^1\) across it.
+  \(L_v = 0\) matches the latent velocity just before and just after each
+  seam, so the latent curve is \(C^1\) across it.
 
   \medskip
   \textbf{Anti-collapse.}\quad With \(\sigma_j^2\) the variance of latent
