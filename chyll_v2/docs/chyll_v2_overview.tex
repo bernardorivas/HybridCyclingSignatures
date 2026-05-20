@@ -27,7 +27,7 @@
 \newcommand{\Xr}{X'}
 
 \title[CHyLL v2]{CHyLL v2: Continuous Latent Embeddings of Hybrid Systems}
-\subtitle{What the model learns, and what each loss term enforces}
+\subtitle{Method, loss terms, and a guide to the trained models and data}
 \author{Kaito Iwasaki}
 \date{}
 
@@ -42,7 +42,7 @@
 
   \vspace{0.8em}
   \begin{itemize}
-    \item A walking robot: the swing leg moves smoothly, then strikes the
+    \item A passive walker: the swing leg moves smoothly, then strikes the
       ground and the state jumps.
     \item A bouncing ball: free flight under gravity, then an instantaneous
       change of velocity at each impact.
@@ -239,6 +239,110 @@
       than closing into a loop, so its topological signature is only partially
       recovered.
   \end{itemize}
+\end{frame}
+
+\begin{frame}{Where the Models and Data Live}
+  \small
+  \begin{center}
+  \begin{tabular}{ll}
+    \toprule
+    Path & Contents \\
+    \midrule
+    \code{runs/<name>/} & trained model, config, training log \\
+    \code{figures/<name>/} & loss and rollout figures \\
+    \code{cycling_signature/data/} & exported lifts and rank summaries \\
+    \code{cycling_signature/figures/} & rank distribution and heatmap figures \\
+    \code{compass_analysis/} & compass cascade cluster analysis \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.7em}
+  \normalsize
+  Paths are under \code{chyll_v2/}. Each \code{<name>} is one trained run,
+  for example \code{rimless_wheel_phaseB_finetune}.
+\end{frame}
+
+\begin{frame}{A Trained Run}
+  Each directory in \code{chyll_v2/runs/} contains:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item \code{model.pt}: the learned network weights.
+    \item \code{config.json}: dimensions, system parameters, and loss weights.
+    \item \code{train_log.jsonl}: the loss terms recorded over training.
+  \end{itemize}
+
+  \vspace{0.6em}
+  The config is enough to rebuild the network and reload the weights. The
+  export scripts under \code{cycling_signature/export/} do exactly this.
+\end{frame}
+
+\begin{frame}{What an Exported Lift Contains}
+  An exported lift is a sampled trajectory in the latent space \(Z\):
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item \code{..._positions}: the sampled latent points, one per row.
+    \item \code{..._tangents}: the unit tangent direction at each point.
+  \end{itemize}
+
+  \vspace{0.5em}
+  Both arrays have shape \((N, d)\): \(N\) samples and \(d\) latent
+  coordinates. Each lift is written as \code{.npy} for Python and \code{.csv}
+  for inspection.
+\end{frame}
+
+\begin{frame}[fragile]{Loading a Lift in Python}
+\begin{verbatim}
+import numpy as np
+
+folder = "chyll_v2/cycling_signature/data/rimless_wheel"
+base = folder + "/continuous_lift_chyll_v2_phaseB"
+
+Z = np.load(base + ".npy")           # positions
+T = np.load(base + "_tangents.npy")  # unit tangents
+
+print(Z.shape, T.shape)
+print(np.linalg.norm(T, axis=1).max())
+\end{verbatim}
+
+  \code{Z} holds the latent positions and \code{T} the unit tangents. The
+  printed tangent norm should be close to \(1\).
+\end{frame}
+
+\begin{frame}{From a Trained Model to a Rank Figure}
+  The topology analysis runs in three stages:
+
+  \vspace{0.5em}
+  \begin{enumerate}
+    \item \textbf{Export}: a script in \code{cycling_signature/export/} turns
+      a trained model into a latent lift.
+    \item \textbf{Compute}: \code{cycling_signature/julia/run_subsegments.jl}
+      computes the cycling signature over random subsegments.
+    \item \textbf{Plot}: \code{cycling_signature/plot/plot_signature_figures.py}
+      draws the rank distribution and heatmaps.
+  \end{enumerate}
+
+  \vspace{0.5em}
+  The \code{cycling_signature/} folder has its own README with the exact
+  commands.
+\end{frame}
+
+\begin{frame}{Sanity Checks}
+  After loading a lift:
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item positions and tangents have the same shape,
+    \item tangent norms are close to \(1\),
+    \item the latent dimension \(d\) matches the system, 7 or 11.
+  \end{itemize}
+
+  \vspace{0.6em}
+  A common mistake is pairing a model with the wrong \code{config.json}: the
+  network shape will not match the saved weights. Take \code{model.pt} and
+  \code{config.json} from the same run directory.
 \end{frame}
 
 \begin{frame}{Where the Code Lives}
