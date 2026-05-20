@@ -51,13 +51,17 @@ def main() -> int:
     parser.add_argument(
         "--model",
         type=Path,
-        default=REPO_ROOT / "chyll_v2" / "runs" / "compass_gait" / "model.pt",
+        default=REPO_ROOT / "chyll_v2" / "runs" / "compass_gait_phi007" / "model.pt",
     )
-    parser.add_argument("--config", type=Path, default=None)
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=REPO_ROOT / "chyll_v2" / "runs" / "compass_gait_phi007" / "config.json",
+    )
     parser.add_argument(
         "--out-dir",
         type=Path,
-        default=REPO_ROOT / "chyll_v2" / "cycling_signature" / "data" / "compass_gait",
+        default=REPO_ROOT / "chyll_v2" / "cycling_signature" / "data" / "compass_gait_phi007",
     )
     parser.add_argument("--base", default="continuous_lift_chyll_v2_compass")
     parser.add_argument("--n-impacts", type=int, default=10)

@@ -407,12 +407,12 @@ def main() -> int:
     parser.add_argument(
         "--model",
         type=Path,
-        default=REPO_ROOT / "chyll_v2" / "runs" / "rimless_wheel" / "model.pt",
+        default=REPO_ROOT / "chyll_v2" / "runs" / "rimless_wheel_phaseB_finetune" / "model.pt",
     )
     parser.add_argument(
         "--config",
         type=Path,
-        default=REPO_ROOT / "chyll_v2" / "runs" / "rimless_wheel" / "config.json",
+        default=REPO_ROOT / "chyll_v2" / "runs" / "rimless_wheel_phaseB_finetune" / "config.json",
     )
     parser.add_argument(
         "--out-dir",
@@ -425,7 +425,7 @@ def main() -> int:
             / "rimless_wheel"
         ),
     )
-    parser.add_argument("--base", default="continuous_lift_chyll_v2")
+    parser.add_argument("--base", default="continuous_lift_chyll_v2_phaseB")
     parser.add_argument("--n-impacts", type=int, default=5)
     parser.add_argument("--n-s", type=int, default=50)
     parser.add_argument("--max-time", type=float, default=50.0)

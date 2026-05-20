@@ -49,15 +49,19 @@ def main() -> int:
     parser.add_argument(
         "--model",
         type=Path,
-        default=REPO_ROOT / "chyll_v2" / "runs" / "bouncing_ball_wv1_twoseam" / "model.pt",
+        default=REPO_ROOT / "chyll_v2" / "runs" / "bouncing_ball_phaseB_finetune" / "model.pt",
     )
-    parser.add_argument("--config", type=Path, default=None)
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=REPO_ROOT / "chyll_v2" / "runs" / "bouncing_ball_phaseB_finetune" / "config.json",
+    )
     parser.add_argument(
         "--out-dir",
         type=Path,
         default=REPO_ROOT / "chyll_v2" / "cycling_signature" / "data" / "bouncing_ball",
     )
-    parser.add_argument("--base", default="continuous_lift_chyll_v2_bb_wv1_twoseam")
+    parser.add_argument("--base", default="continuous_lift_chyll_v2_bb_phaseB")
     parser.add_argument("--n-impacts", type=int, default=5)
     parser.add_argument("--n-s", type=int, default=50)
     parser.add_argument("--max-time", type=float, default=10.0)
