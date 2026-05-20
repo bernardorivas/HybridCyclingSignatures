@@ -208,8 +208,9 @@
   \[ L_v = \frac{1}{|\mathcal{S}|}\sum_{k\in\mathcal{S}}
      \Big\lVert \frac{z_k - z_{k-1}}{\tau}
        - \frac{z_{k+2} - z_{k+1}}{\tau}\Big\rVert^2 . \]
-  \(L_v = 0\) matches the latent velocity just before and just after each
-  seam, so the latent curve is \(C^1\) across it.
+  Minimizing \(L_v\) brings the latent velocity just before and just after
+  each seam into agreement, the \(C^1\) (no-kink) condition the loss aims to
+  enforce.
 
   \medskip
   \textbf{Anti-collapse.}\quad With \(\sigma_j^2\) the variance of latent
@@ -242,6 +243,60 @@
 
   \vspace{0.8em}
   The exact values for any run are stored in its \code{config.json}.
+\end{frame}
+
+\begin{frame}{Training: Rimless Wheel}
+  Training has two phases: Phase A from a random start, then Phase B
+  fine-tuning with the seam-velocity term \(L_v\). The loss falls smoothly
+  across the curriculum and the rollout tracks the true trajectory through
+  many impacts.
+
+  \begin{center}%
+  \includegraphics[height=3.5cm]{../figures/rimless_wheel_phaseB_finetune/loss_history.png}%
+  \hspace{1.5em}%
+  \includegraphics[height=3.5cm]{../figures/rimless_wheel_phaseB_finetune/rollout_vs_truth.png}%
+  \end{center}
+
+  {\small Left: loss history. Right: decoded rollout against ground truth.
+  Final composite loss \(\approx 3.7\times10^{-3}\).}
+\end{frame}
+
+\begin{frame}{Training: Bouncing Ball}
+  The bouncing ball uses the same two-phase training. Each impact removes
+  energy, so the true trajectory is a decaying sequence of bounces, which the
+  rollout reproduces.
+
+  \begin{center}%
+  \includegraphics[height=3.5cm]{../figures/bouncing_ball_phaseB_finetune/loss_history.png}%
+  \hspace{1.5em}%
+  \includegraphics[height=3.5cm]{../figures/bouncing_ball_phaseB_finetune/rollout_vs_truth.png}%
+  \end{center}
+
+  {\small Left: loss history. Right: decoded rollout against ground truth.
+  Final composite loss \(\approx 6.8\times10^{-3}\).}
+\end{frame}
+
+\begin{frame}{Training: Compass-Gait Biped}
+  The compass-gait biped trains in a single phase, one run per ground slope.
+  Shown is the period-2 gait at \(4.75^\circ\); the steeper cascade slopes
+  train the same way.
+
+  \begin{columns}[c]
+    \begin{column}{0.60\textwidth}
+      \centering
+      \includegraphics[height=3.0cm]{../figures/compass_gait_phi_1_4.75deg/loss_history.png}\\
+      {\small loss history}
+    \end{column}
+    \begin{column}{0.38\textwidth}
+      \centering
+      \includegraphics[height=4.5cm]{../figures/compass_gait_phi_1_4.75deg/rollout_vs_truth.png}\\
+      {\small rollout vs.\ truth}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.3em}
+  {\small Final composite loss \(\approx 1.0\times10^{-2}\). The rollout panel
+  shows the augmented state, four physical variables and the coordinate \(s\).}
 \end{frame}
 
 \begin{frame}{Results}
