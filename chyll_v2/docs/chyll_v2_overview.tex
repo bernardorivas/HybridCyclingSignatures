@@ -19,6 +19,13 @@
 
 \newcommand{\code}[1]{\texttt{\small\detokenize{#1}}}
 
+% Map macros, matching the manuscript (sections/chyll_v2.tex).
+\newcommand{\Enc}{E_\theta}
+\newcommand{\Dec}{D_\theta}
+\newcommand{\Dyn}{F_\theta}
+\newcommand{\Lat}{Z}
+\newcommand{\Xr}{X'}
+
 \title[CHyLL v2]{CHyLL v2: Continuous Latent Embeddings of Hybrid Systems}
 \subtitle{What the model learns, and what each loss term enforces}
 \author{Kaito Iwasaki}
@@ -98,18 +105,19 @@
 \end{frame}
 
 \begin{frame}{The Learned Maps}
-  CHyLL v2 learns three maps on the augmented state \(y = (x,s) \in X'\):
+  CHyLL v2 learns three maps. Write \(Z = \mathbb{R}^d\) for the latent space.
 
   \vspace{0.6em}
   \begin{align*}
-    E_\theta &: X' \to \mathbb{R}^m && \text{encoder},\\
-    V_\theta &: \mathbb{R}^m \to \mathbb{R}^m && \text{latent vector field},\\
-    D_\theta &: \mathbb{R}^m \to X' && \text{decoder}.
+    E_\theta &: X' \to Z && \text{encoder},\\
+    V_\theta &: Z \to Z && \text{latent vector field},\\
+    D_\theta &: Z \to X' && \text{decoder}.
   \end{align*}
 
   \vspace{0.4em}
-  The latent dimension is \(m = 7\) for the rimless wheel and bouncing ball,
-  and \(m = 11\) for the compass-gait biped.
+  The time-\(\tau\) flow of \(V_\theta\) is written \(F_\theta\). The latent
+  dimension is \(d = 7\) for the rimless wheel and bouncing ball, and
+  \(d = 11\) for the compass-gait biped.
 \end{frame}
 
 \begin{frame}{Training: The Forward Pass}
@@ -118,7 +126,7 @@
   \vspace{0.5em}
   \begin{align*}
     z_i &= E_\theta(y_i),\\
-    \widehat z_i &= \Psi_{i\tau}(z_0), \qquad \dot z = V_\theta(z),\\
+    \widehat z_i &= F_\theta^{\,i}(z_0),\\
     \widehat y_i &= D_\theta(\widehat z_i).
   \end{align*}
 
@@ -130,39 +138,44 @@
 \end{frame}
 
 \begin{frame}[fragile]{The Commutative Diagram}
-  Write \(\Phi_\tau\) for one time-\(\tau\) step of the system on \(X'\), and
-  \(\Psi_\tau\) for the time-\(\tau\) flow of \(\dot z = V_\theta(z)\).
+  Here \(f_\tau\) is one time-\(\tau\) step of the system, \(G\) the impact
+  set, \(r\) the reset map, and \(\iota_0, \iota_1\) the inclusions at
+  \(s = 0\) and \(s = 1\). The learned maps should make this diagram commute:
 
-  \vspace{0.6em}
+  \vspace{0.3em}
   \begin{center}
-  \begin{tikzcd}[row sep=3.6em, column sep=5.5em]
-    X' \arrow[r, "\Phi_\tau"] \arrow[d, "E_\theta"'] &
-    X' \arrow[d, shift left=1ex, "E_\theta"] \\
-    \mathbb{R}^m \arrow[r, "\Psi_\tau"'] &
-    \mathbb{R}^m \arrow[u, shift left=1ex, "D_\theta"]
+  \small
+  \begin{tikzcd}[column sep=3.0em, row sep=2.4em]
+    G \arrow[r, "\iota_1"] \arrow[d, "\iota_0 \circ r"']
+    & \Xr \arrow[r, "f_\tau"] \arrow[d, "\Enc"']
+    & \Xr \arrow[d, "\Enc"] \\
+    \Xr \arrow[r, "\Enc"'] \arrow[rd, "\mathrm{id}_{\Xr}"']
+    & \Lat \arrow[r, "\Dyn"'] \arrow[d, "\Dec"']
+    & \Lat \\
+    & \Xr
+    \arrow[phantom, from=2-1, to=3-2]
+    &
   \end{tikzcd}
   \end{center}
 
-  \vspace{0.4em}
-  A faithful embedding makes this diagram commute:
+  \vspace{0.2em}
+  \normalsize
+  Each cell is enforced by one loss term:
   \begin{itemize}
-    \item \(L_z\) forces the square to commute:
-      \(\Psi_\tau(E_\theta y) = E_\theta(\Phi_\tau y)\).
-    \item \(L_x\) forces the decoder to recover the state:
-      \(D_\theta(\widehat z_i) = y_i\).
+    \item Left square, \(L_g\): \(E_\theta\) sends both sides of a reset to one latent point.
+    \item Top-right square, \(L_z\): the latent flow matches the dynamics.
+    \item Lower triangle, \(L_x\): the decoder inverts the encoder.
   \end{itemize}
 \end{frame}
 
-\begin{frame}{The Mapping-Cylinder Seam}
-  The diagram fixes the dynamics. Three more terms handle the hybrid
-  structure, at the seam where \(s\) wraps from \(1\) back to \(0\):
+\begin{frame}{Two Conditions Beyond the Diagram}
+  Commuting is not the whole story. Two more terms act at the seam where
+  \(s\) wraps from \(1\) back to \(0\):
 
   \vspace{0.6em}
   \begin{itemize}
-    \item \(L_g\): the two sides of a reset map to the \emph{same} latent
-      point, so the encoder respects the gluing.
     \item \(L_v\): the latent velocity has no kink crossing a seam.
-    \item \(L_c\): the encoder keeps all \(m\) latent coordinates active and
+    \item \(L_c\): the encoder keeps all \(d\) latent coordinates active and
       does not collapse them.
   \end{itemize}
 
@@ -189,9 +202,8 @@
 
   \vspace{0.8em}
   \normalsize
-  \(L_x\) and \(L_z\) are the two commutative-diagram conditions. \(L_g\),
-  \(L_v\), and \(L_c\) are the extra conditions specific to the hybrid
-  mapping-cylinder structure.
+  \(L_g\), \(L_z\), and \(L_x\) are the three commuting cells of the diagram.
+  \(L_v\) and \(L_c\) are the two conditions beyond it.
 \end{frame}
 
 \begin{frame}{The Composite Objective}
@@ -255,8 +267,8 @@
   \begin{itemize}
     \item A hybrid system is made continuous on the mapping cylinder \(X'\).
     \item CHyLL v2 learns an encoder, a latent vector field, and a decoder.
-    \item \(L_z\) and \(L_x\) make the encode/flow/decode diagram commute.
-    \item \(L_g\), \(L_v\), and \(L_c\) enforce the hybrid seam structure.
+    \item \(L_g\), \(L_z\), and \(L_x\) are the commuting cells of the diagram.
+    \item \(L_v\) and \(L_c\) add the seam-regularity conditions.
     \item The learned embeddings recover the expected topology for the rimless
       wheel and the compass-gait cascade.
   \end{itemize}
