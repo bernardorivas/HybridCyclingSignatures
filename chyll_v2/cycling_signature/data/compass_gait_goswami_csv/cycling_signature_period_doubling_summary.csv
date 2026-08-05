@@ -1,6 +1,0 @@
-case,expected_period,latent_return_count,beta1_at_0.30,max_beta1_common_scales,first_length_rank1_probability_ge_0.8,interpretation
-period1,1,1,1,1,150,period recovered by latent Poincare returns
-period2,2,2,1,7,225,period recovered by latent Poincare returns
-period4,4,4,1,9,200,period recovered by latent Poincare returns
-period8,8,8,1,9,225,period recovered by latent Poincare returns
-chaos,,non-finite cloud,1,1,225,aperiodic return cloud

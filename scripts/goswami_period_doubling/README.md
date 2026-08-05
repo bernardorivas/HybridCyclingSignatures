@@ -104,7 +104,7 @@ The period-2/4/8/chaotic trajectories use slope-matched checkpoints.  The
 period-1 trajectory at 4.00 degrees uses the nearby checkpoint trained at
 `phi = 0.07 rad = 4.0107 degrees`; the manifest records this explicitly.
 
-### Cycling-signature input
+### Inputs for downstream cycling-signature computation
 
 The exported position/tangent pairs already match the input format of
 `run_subsegments.jl`.  For example:
@@ -118,32 +118,6 @@ julia --project="time series/cycling_signature" \
 
 Change `period2` in both places to `period1`, `period4`, `period8`, or
 `chaos` for the other systems.
-
-The five-case comparison currently uses box size `0.30`, sphere-bundle
-radius `1`, evaluation radius `0.15`, segment lengths `100:25:400`, and 30
-random subsegments at each length.  Its per-case `cycling_goswami_*` CSVs are
-stored beside each learned lift.  The companion scale sweeps use box sizes
-from `0.05` to `0.50` for the periodic cases and `0.10` to `0.50` for chaos.
-
-Regenerate the comparison summary and figure with:
-
-```bash
-MPLBACKEND=Agg MPLCONFIGDIR=/tmp/mpl-compass \
-  /Users/kaitoi/.venvs/sci/bin/python \
-  scripts/goswami_period_doubling/plot_cycling_signature_comparison.py
-```
-
-The resulting figure is
-`chyll_v2/cycling_signature/figures/goswami_period_doubling_cycling_signatures.png`
-and the exact summary is
-`chyll_v2/cycling_signature/data/compass_gait_goswami_csv/cycling_signature_period_doubling_summary.csv`.
-
-At the robust coarse scale, every periodic orbit has `beta_1(Y) = 1`, as
-expected for a topological circle.  Fine-scale comparison-space curves do
-separate some members of the cascade, but their extra generators are
-scale-dependent and are not literal period counts.  The distinct latent
-Poincare-return count is therefore retained as the explicit `1/2/4/8`
-period diagnostic.
 
 ### Conley-oriented data
 
