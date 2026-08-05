@@ -1,0 +1,21 @@
+n_samples: 20001
+dim: 4
+dt: 2.000000e-02
+t_span: 4.000000e+02
+system: compass_gait
+label: period1
+phi_deg: 4.0
+phi: 0.06981317007977318
+expected_period: 1
+ic_used: (np.float64(-0.3398131700797732), np.float64(0.20018682992022685), np.float64(-0.38), np.float64(-1.09))
+attempt: 0
+t_span: 400.0
+dt: 0.02
+burn_in_strides: 80
+n_strides_main: 534
+max_arc_time: 5.0
+rtol: 1e-10
+atol: 1e-12
+max_step: 0.01
+n_samples: 20001
+n_impacts: 534

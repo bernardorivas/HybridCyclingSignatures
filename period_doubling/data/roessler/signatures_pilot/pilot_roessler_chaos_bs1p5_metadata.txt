@@ -1,0 +1,22 @@
+Cycling signature analysis -- period doubling study
+base=roessler_chaos
+positions=/Users/bdoprad/Work/Projects/hybrid-cycling-signatures/code/period_doubling/data/roessler/roessler_chaos_positions.csv
+tangents=/Users/bdoprad/Work/Projects/hybrid-cycling-signatures/code/period_doubling/data/roessler/roessler_chaos_tangents.csv
+dim=3
+samples=25001
+samples_post_stride=12501
+stride=2
+boxsize=1.5
+sb_radius=1
+C=1.5
+beta1_Y=2
+r_max=1.5
+r_subdivisions=101
+eval_radii=1.5
+segment_lengths=100,200,400,800,1200
+n_runs=20
+seed=20260512
+parallel_inner=false
+max_rank=3
+max_spaces=8
+max_spaces_2=8

@@ -1,0 +1,11 @@
+system,regime,parameter,expected_period,detected_clusters,ok,n_samples,dt,t_span,n_impacts
+roessler,period1,c=4.0,1,1,TRUE,25001,0.02,500.0,
+roessler,period2,c=6.0,2,2,TRUE,25001,0.02,500.0,
+roessler,period4,c=8.5,4,4,TRUE,25001,0.02,500.0,
+roessler,period8,c=8.7,8,8,TRUE,25001,0.02,500.0,
+roessler,chaos,c=9.0,,21,TRUE,25001,0.02,500.0,
+compass,period1,phi=4.00deg,1,1,TRUE,20001,0.02,400.0,534
+compass,period2,phi=4.75deg,2,2,TRUE,20001,0.02,400.0,532
+compass,period4,phi=5.00deg,4,4,TRUE,20001,0.02,400.0,533
+compass,period8,phi=5.02deg,8,8,TRUE,20001,0.02,400.0,532
+compass,chaos,phi=5.20deg,,116,TRUE,20001,0.02,400.0,531
