@@ -1,0 +1,82 @@
+{
+  "case": "period2",
+  "phi_deg": 4.75,
+  "expected_period": 2,
+  "input_timeseries": "compass_goswami_output/period2_timeseries.csv",
+  "input_returns": "compass_goswami_output/period2_returns.csv",
+  "model": "chyll_v2/runs/compass_gait_phi_1_4.75deg/model.pt",
+  "config": "chyll_v2/runs/compass_gait_phi_1_4.75deg/config.json",
+  "model_note": "Slope-matched period-2 model.",
+  "latent_dim": 11,
+  "n_samples": 5061,
+  "n_successor_edges": 5060,
+  "n_arcs": 40,
+  "n_impacts": 40,
+  "n_bridge_samples_per_impact": 50,
+  "physical_time_end": 30.042792917368423,
+  "relaxed_time_end": 70.04279291736842,
+  "gluing_error": {
+    "mean": 0.10390196368098259,
+    "median": 0.10390196368098259,
+    "p05": 0.10378697514533997,
+    "p95": 0.10401695221662521,
+    "max": 0.10401695221662521
+  },
+  "reconstruction_error_all": {
+    "mean": 0.1983951772602001,
+    "median": 0.047833807053474696,
+    "p05": 0.014087808945435508,
+    "p95": 1.3887495373152683,
+    "max": 2.228370450182028
+  },
+  "reconstruction_error_arc": {
+    "mean": 0.199452529779279,
+    "median": 0.02798796784664457,
+    "p05": 0.012123319874599104,
+    "p95": 1.9134659366835638,
+    "max": 2.228370450182028
+  },
+  "reconstruction_error_bridge": {
+    "mean": 0.19677689922974975,
+    "median": 0.08528000969913768,
+    "p05": 0.017627692641621694,
+    "p95": 0.592798155453442,
+    "max": 2.144085669836067
+  },
+  "latent_velocity_norm": {
+    "mean": 9.15378770303453,
+    "median": 5.785653591156006,
+    "p05": 1.9043047428131104,
+    "p95": 23.613224029541016,
+    "max": 27.130416870117188
+  },
+  "trajectory_vfield_alignment": {
+    "definition": "signed cosine between the learned vector-field tangent and the forward tangent of the encoded ordered curve",
+    "arc": {
+      "mean": 0.9782664389010297,
+      "median": 0.9994169473648071,
+      "p05": 0.8365452885627747,
+      "p95": 0.9998894929885864,
+      "max": 0.9999602437019348,
+      "fraction_positive": 1.0
+    },
+    "bridge": {
+      "mean": 0.982753225127045,
+      "median": 0.9967124462127686,
+      "p05": 0.8830638527870178,
+      "p95": 0.9989202618598938,
+      "max": 0.9989688992500305,
+      "fraction_positive": 1.0
+    }
+  },
+  "period_closure_error": {
+    "mean": 0.0,
+    "median": 0.0,
+    "p05": 0.0,
+    "p95": 0.0,
+    "max": 0.0
+  },
+  "tiny_vfield_tangent_repairs": 0,
+  "tiny_diff_tangent_repairs": 1,
+  "cycling_signature_base": "continuous_lift_goswami_period2_vfield"
+}
