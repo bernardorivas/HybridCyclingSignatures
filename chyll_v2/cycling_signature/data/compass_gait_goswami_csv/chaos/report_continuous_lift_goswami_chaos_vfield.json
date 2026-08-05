@@ -1,0 +1,76 @@
+{
+  "case": "chaos",
+  "phi_deg": 5.2,
+  "expected_period": null,
+  "input_timeseries": "compass_goswami_output/chaos_timeseries.csv",
+  "input_returns": "compass_goswami_output/chaos_returns.csv",
+  "model": "chyll_v2/runs/compass_gait_phi_4_cloud_5.2deg/model.pt",
+  "config": "chyll_v2/runs/compass_gait_phi_4_cloud_5.2deg/config.json",
+  "model_note": "Slope-matched chaotic-cloud model.",
+  "latent_dim": 11,
+  "n_samples": 25336,
+  "n_successor_edges": 25335,
+  "n_arcs": 200,
+  "n_impacts": 200,
+  "n_bridge_samples_per_impact": 50,
+  "physical_time_end": 150.33932605835497,
+  "relaxed_time_end": 350.33932605835497,
+  "gluing_error": {
+    "mean": 0.10776823252439499,
+    "median": 0.10751887783408165,
+    "p05": 0.08908373787999153,
+    "p95": 0.124481737986207,
+    "max": 0.1280515342950821
+  },
+  "reconstruction_error_all": {
+    "mean": 0.2059340943681781,
+    "median": 0.06630485455902041,
+    "p05": 0.019670563992350485,
+    "p95": 1.1803052650058263,
+    "max": 2.6103332297147115
+  },
+  "reconstruction_error_arc": {
+    "mean": 0.20643665115535517,
+    "median": 0.055034577037039095,
+    "p05": 0.018476862480850925,
+    "p95": 1.7115980287730772,
+    "max": 2.4376319389147825
+  },
+  "reconstruction_error_bridge": {
+    "mean": 0.20516337327936343,
+    "median": 0.1028035461413683,
+    "p05": 0.02218102911367396,
+    "p95": 0.6753363677112142,
+    "max": 2.6103332297147115
+  },
+  "latent_velocity_norm": {
+    "mean": 9.24379198746253,
+    "median": 5.5537824630737305,
+    "p05": 1.878206044435501,
+    "p95": 23.97282600402832,
+    "max": 28.166419982910156
+  },
+  "trajectory_vfield_alignment": {
+    "definition": "signed cosine between the learned vector-field tangent and the forward tangent of the encoded ordered curve",
+    "arc": {
+      "mean": 0.9771753000517458,
+      "median": 0.9990707039833069,
+      "p05": 0.9073201477527618,
+      "p95": 0.9998767733573913,
+      "max": 0.9999380707740784,
+      "fraction_positive": 0.9989428477039973
+    },
+    "bridge": {
+      "mean": 0.984978208365489,
+      "median": 0.9958679974079132,
+      "p05": 0.943339392542839,
+      "p95": 0.9988896399736404,
+      "max": 0.9994060397148132,
+      "fraction_positive": 1.0
+    }
+  },
+  "period_closure_error": null,
+  "tiny_vfield_tangent_repairs": 0,
+  "tiny_diff_tangent_repairs": 1,
+  "cycling_signature_base": "continuous_lift_goswami_chaos_vfield"
+}
