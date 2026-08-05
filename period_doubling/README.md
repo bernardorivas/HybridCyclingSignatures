@@ -209,6 +209,25 @@ The package includes post-hoc numerical checks:
 
 `generate_all.py` runs these checks and exits with code 1 if any periodic regime does not match its expected period (chaos is exempt). This validates that the fixed-time-span data actually captures the intended dynamical regime.
 
+## Raw compass-gait signatures (negative control)
+
+Cycling signatures were computed directly on the raw (discontinuous) compass-gait state data, per regime:
+
+```bash
+julia --project=julia julia/run_signatures.jl \
+  --data-dir data/compass_gait \
+  --base compass_{period1,period2,period4,period8,chaos} \
+  --boxsize 0.3 --sb-radius 1 --stride 2 \
+  --segment-lengths 10,20,...,300 \
+  --n-runs 150 \
+  --eval-radius 0.1,0.2,0.3 \
+  --out-dir data/compass_gait/signatures
+```
+
+Observed `beta1_Y` (first Betti number of the ambient cubical complex at boxsize 0.3): period1 = 0, period2 = 1, period4 = 0, period8 = 0, chaos = 0.
+
+Result: in period1, period4, period8, and chaos the ambient complex carries no 1-cycles at all, so every subsegment has cycling rank 0 at all three evaluation radii — vanilla cycling signatures on the raw hybrid state see no cycling, because the reset discontinuity prevents the arcs from closing. This is the negative-control baseline for the forthcoming suspension-embedding comparison, where the same data lifted to the suspension is expected to exhibit the period-doubling cascade. One caveat: in the period2 regime the boxsize-0.3 cover incidentally closes a single loop (`beta1_Y = 1`), and rank 1 then dominates for segment time spans above roughly 1 at all three radii (rank-1 fractions 3907/4500, 4001/4500, 4018/4500 at r = 0.1, 0.2, 0.3); this is a resolution artifact of the cubical cover closing a loop that the trajectory itself does not close, not a recovered hybrid cycle, and it is absent in the other four regimes. A box-size probe confirms the artifact reading: `beta1_Y` for period2 is 5, 3, 0, 1 at boxsize 0.15, 0.2, 0.25, 0.3 respectively (`signatures_pilot/probe_period2_*`) — non-monotone in the cover scale, unlike the Roessler comparison spaces, which are stable across box sizes. On raw hybrid data the vanilla method thus produces both a false negative (the genuine period-1 limit cycle is invisible because its arc never closes) and a scale-unstable false positive (period2).
+
 ## References
 
 - Roessler, O. E. (1976). "An equation for continuous chaos." *Phys. Lett. A*, 57(5), 397–398.

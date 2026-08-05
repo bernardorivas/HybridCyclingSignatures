@@ -1,0 +1,22 @@
+Cycling signature analysis -- period doubling study
+base=compass_period2
+positions=/Users/bdoprad/Work/Projects/hybrid-cycling-signatures/code/period_doubling/data/compass_gait/compass_period2_positions.csv
+tangents=/Users/bdoprad/Work/Projects/hybrid-cycling-signatures/code/period_doubling/data/compass_gait/compass_period2_tangents.csv
+dim=4
+samples=20001
+samples_post_stride=10001
+stride=2
+boxsize=0.2
+sb_radius=1
+C=0.2
+beta1_Y=3
+r_max=0.2
+r_subdivisions=101
+eval_radii=0.2
+segment_lengths=50,100
+n_runs=10
+seed=20260512
+parallel_inner=false
+max_rank=3
+max_spaces=8
+max_spaces_2=8

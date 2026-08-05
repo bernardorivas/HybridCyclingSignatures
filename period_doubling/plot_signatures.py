@@ -9,20 +9,21 @@ Reads cycling-signature CSVs from Julia output and generates publication-quality
 - Fig 14: Rank-1 to Rank-2 inclusion graphs (bipartite)
 - Fig 15: Rank heatmaps grid
 
-Data layout: {data_root}/roessler/signatures/ with files like
-  subsegments_roessler_{regime}_rank_at_radius.csv
-  subsegments_roessler_{regime}_rank1_spaces_at_radius.csv
-  subsegments_roessler_{regime}_rank2_spaces_at_radius.csv
-  subsegments_roessler_{regime}_s21_inclusion.csv
-  subsegments_roessler_{regime}_rank_heatmap_rank{k}.csv
-  roessler_{regime}.npz (for dt extraction)
-  subsegments_roessler_{regime}_metadata.txt (for stride)
+Data layout: {data_root}/{system}/signatures/ with files like
+  subsegments_{prefix}_{regime}_rank_at_radius.csv
+  subsegments_{prefix}_{regime}_rank1_spaces_at_radius.csv
+  subsegments_{prefix}_{regime}_rank2_spaces_at_radius.csv
+  subsegments_{prefix}_{regime}_s21_inclusion.csv
+  subsegments_{prefix}_{regime}_rank_heatmap_rank{k}.csv
+  {prefix}_{regime}.npz (for dt extraction)
+  subsegments_{prefix}_{regime}_metadata.txt (for stride)
 
 Segment lengths are in post-stride samples; convert to time spans via
   tau = length * dt * stride
 
 Usage:
   python plot_signatures.py
+  python plot_signatures.py --system compass
   python plot_signatures.py --data-root /path/to/data --fig-dir /path/to/figures
   python plot_signatures.py --eval-radius-suffix r0p8
 """
@@ -44,6 +45,37 @@ import numpy as np
 # ============================================================================
 
 REGIMES = ["period1", "period2", "period4", "period8", "chaos"]
+
+
+class SystemConfig:
+    """Configuration for a hybrid system (Roessler or Compass Gait)."""
+    def __init__(self, prefix, data_subdir, fig_prefix, suptitle, param_key, param_format_fn):
+        self.prefix = prefix
+        self.data_subdir = data_subdir
+        self.fig_prefix = fig_prefix
+        self.suptitle = suptitle
+        self.param_key = param_key  # npz meta key for system parameter (e.g., "c" or "phi_deg")
+        self.param_format_fn = param_format_fn  # function to format param value for display
+
+
+SYSTEM_CONFIGS = {
+    "roessler": SystemConfig(
+        prefix="roessler",
+        data_subdir="roessler",
+        fig_prefix="roessler_",
+        suptitle="Roessler",
+        param_key="c",
+        param_format_fn=lambda v: f"c = {v}"
+    ),
+    "compass": SystemConfig(
+        prefix="compass",
+        data_subdir="compass_gait",
+        fig_prefix="compass_",
+        suptitle="Compass gait (raw hybrid state)",
+        param_key="phi_deg",
+        param_format_fn=lambda v: f"$\\phi$ = {v:.2f}$^\\circ$"
+    ),
+}
 RANK_COLORS = {
     0: "#d3d3d3",  # light gray
     1: "#1f77b4",  # tab:blue
@@ -57,6 +89,30 @@ RANK_COLORS.update({i: plt.cm.Reds(0.4 + 0.5 * (i - 4) / 3) for i in range(4, 8)
 SPACE_COLORS_TAB10 = plt.cm.tab10(np.arange(10))
 # Create extended palette by cycling
 SPACE_COLORS = {i: SPACE_COLORS_TAB10[i % 10] for i in range(20)}
+
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+def format_panel_title(regime, system_config, data_dict):
+    """Format panel title with optional system parameter.
+
+    Args:
+        regime: regime name (e.g., "period1")
+        system_config: SystemConfig instance
+        data_dict: data dictionary containing "param_value" key if available
+
+    Returns:
+        formatted title string
+    """
+    if system_config is None or data_dict is None:
+        return regime
+    param_value = data_dict.get("param_value")
+    if param_value is None:
+        return regime
+    param_str = system_config.param_format_fn(param_value)
+    return f"{regime} ({param_str})"
 
 
 # ============================================================================
@@ -186,7 +242,7 @@ def load_rank_heatmap_csv(csv_path):
 # Figure Generation Functions
 # ============================================================================
 
-def fig_10_rank_stacked(regimes_data, time_spans_dict, out_path, dpi=200):
+def fig_10_rank_stacked(regimes_data, time_spans_dict, out_path, system_config, dpi=200):
     """
     Figure 10: Rank distribution (stacked bar chart).
 
@@ -201,13 +257,13 @@ def fig_10_rank_stacked(regimes_data, time_spans_dict, out_path, dpi=200):
     for ax, regime, data_dict in zip(axes, REGIMES, regimes_data):
         if data_dict is None:
             ax.text(0.5, 0.5, "No data", ha="center", va="center")
-            ax.set_title(regime)
+            ax.set_title(format_panel_title(regime, system_config, data_dict))
             continue
 
         rank_data = data_dict["rank_at_radius"]
         if rank_data is None:
             ax.text(0.5, 0.5, "No rank data", ha="center", va="center")
-            ax.set_title(regime)
+            ax.set_title(format_panel_title(regime, system_config, data_dict))
             continue
 
         segment_lengths = np.array(rank_data["segment_length"])
@@ -231,7 +287,7 @@ def fig_10_rank_stacked(regimes_data, time_spans_dict, out_path, dpi=200):
 
         ax.set_xlabel("segment time span")
         ax.set_ylabel("#segments" if ax == axes[0] else "")
-        ax.set_title(regime)
+        ax.set_title(format_panel_title(regime, system_config, data_dict))
 
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="center right", bbox_to_anchor=(1.15, 0.5))
@@ -242,7 +298,7 @@ def fig_10_rank_stacked(regimes_data, time_spans_dict, out_path, dpi=200):
     print(f"Wrote {out_path}")
 
 
-def fig_11_sig1_stacked(regimes_data, time_spans_dict, out_path, dpi=200):
+def fig_11_sig1_stacked(regimes_data, time_spans_dict, out_path, system_config, dpi=200):
     """
     Figure 11: Rank-1 cycling spaces (stacked line plot).
 
@@ -261,13 +317,13 @@ def fig_11_sig1_stacked(regimes_data, time_spans_dict, out_path, dpi=200):
     for ax, regime, data_dict in zip(axes, REGIMES, regimes_data):
         if data_dict is None or data_dict["rank1_spaces"] == (None, None):
             ax.text(0.5, 0.5, "No data", ha="center", va="center")
-            ax.set_title(regime)
+            ax.set_title(format_panel_title(regime, system_config, data_dict))
             continue
 
         spaces, counts_dict = data_dict["rank1_spaces"]
         if spaces is None:
             ax.text(0.5, 0.5, "No rank-1 spaces", ha="center", va="center")
-            ax.set_title(regime)
+            ax.set_title(format_panel_title(regime, system_config, data_dict))
             continue
 
         rank_data = data_dict["rank_at_radius"]
@@ -297,7 +353,7 @@ def fig_11_sig1_stacked(regimes_data, time_spans_dict, out_path, dpi=200):
 
         ax.set_xlabel("segment time span")
         ax.set_ylabel("#segments" if ax == axes[0] else "")
-        ax.set_title(regime)
+        ax.set_title(format_panel_title(regime, system_config, data_dict))
 
     # Legend for all spaces found
     handles, labels = axes[-1].get_legend_handles_labels()
@@ -311,7 +367,7 @@ def fig_11_sig1_stacked(regimes_data, time_spans_dict, out_path, dpi=200):
     print(f"Wrote {out_path}")
 
 
-def fig_13_sig2_stacked(regimes_data, time_spans_dict, out_path, dpi=200):
+def fig_13_sig2_stacked(regimes_data, time_spans_dict, out_path, system_config, dpi=200):
     """
     Figure 13: Rank-2 cycling spaces (stacked line plot).
 
@@ -328,13 +384,13 @@ def fig_13_sig2_stacked(regimes_data, time_spans_dict, out_path, dpi=200):
     for ax, regime, data_dict in zip(axes, REGIMES, regimes_data):
         if data_dict is None or data_dict["rank2_spaces"] == (None, None):
             ax.text(0.5, 0.5, "No data", ha="center", va="center")
-            ax.set_title(regime)
+            ax.set_title(format_panel_title(regime, system_config, data_dict))
             continue
 
         spaces, counts_dict = data_dict["rank2_spaces"]
         if spaces is None:
             ax.text(0.5, 0.5, "No rank-2 spaces", ha="center", va="center")
-            ax.set_title(regime)
+            ax.set_title(format_panel_title(regime, system_config, data_dict))
             continue
 
         rank_data = data_dict["rank_at_radius"]
@@ -361,7 +417,7 @@ def fig_13_sig2_stacked(regimes_data, time_spans_dict, out_path, dpi=200):
 
         ax.set_xlabel("segment time span")
         ax.set_ylabel("#segments" if ax == axes[0] else "")
-        ax.set_title(regime)
+        ax.set_title(format_panel_title(regime, system_config, data_dict))
 
     handles, labels = axes[-1].get_legend_handles_labels()
     if handles:
@@ -374,7 +430,7 @@ def fig_13_sig2_stacked(regimes_data, time_spans_dict, out_path, dpi=200):
     print(f"Wrote {out_path}")
 
 
-def fig_14_inclusion_graphs(regimes_data, out_path, dpi=200):
+def fig_14_inclusion_graphs(regimes_data, out_path, system_config, dpi=200):
     """
     Figure 14: Inclusion graphs (bipartite).
 
@@ -406,7 +462,7 @@ def fig_14_inclusion_graphs(regimes_data, out_path, dpi=200):
             data_dict["rank2_spaces"][0] is None or
             data_dict["inclusion"] is None):
             ax.text(3, 1, "no rank-2 segments", ha="center", va="center", fontsize=10)
-            ax.set_title(regime)
+            ax.set_title(format_panel_title(regime, system_config, data_dict))
             continue
 
         inclusion = data_dict["inclusion"]
@@ -415,7 +471,7 @@ def fig_14_inclusion_graphs(regimes_data, out_path, dpi=200):
 
         if not inclusion or not rank2_spaces:
             ax.text(3, 1, "no rank-2 segments", ha="center", va="center", fontsize=10)
-            ax.set_title(regime)
+            ax.set_title(format_panel_title(regime, system_config, data_dict))
             continue
 
         # Assign labels
@@ -463,7 +519,7 @@ def fig_14_inclusion_graphs(regimes_data, out_path, dpi=200):
                 ax.add_patch(circle)
                 ax.text(x, 1.5, label, ha="center", va="center", fontsize=9, weight="bold", zorder=4)
 
-        ax.set_title(regime)
+        ax.set_title(format_panel_title(regime, system_config, data_dict))
 
     fig.suptitle("Inclusion graphs (rank-1 to rank-2)", fontsize=12, y=0.98)
     plt.tight_layout()
@@ -472,7 +528,7 @@ def fig_14_inclusion_graphs(regimes_data, out_path, dpi=200):
     print(f"Wrote {out_path}")
 
 
-def fig_15_rank_heatmaps(regimes_data, time_spans_dict, out_path, dpi=200):
+def fig_15_rank_heatmaps(regimes_data, time_spans_dict, out_path, system_config, dpi=200):
     """
     Figure 15: Rank heatmaps grid.
 
@@ -510,13 +566,15 @@ def fig_15_rank_heatmaps(regimes_data, time_spans_dict, out_path, dpi=200):
 
             if data_dict is None:
                 ax.text(0.5, 0.5, "Missing data", ha="center", va="center", transform=ax.transAxes)
-                ax.set_title(f"{regime} rank-{rank}")
+                title_base = format_panel_title(regime, system_config, data_dict)
+                ax.set_title(f"{title_base} rank-{rank}")
                 continue
 
             heatmap_data = data_dict.get(f"rank{rank}_heatmap")
             if heatmap_data is None:
                 ax.text(0.5, 0.5, f"No rank-{rank}", ha="center", va="center", transform=ax.transAxes)
-                ax.set_title(f"{regime} rank-{rank}")
+                title_base = format_panel_title(regime, system_config, data_dict)
+                ax.set_title(f"{title_base} rank-{rank}")
                 continue
 
             radii, segment_lengths, counts = heatmap_data
@@ -538,7 +596,8 @@ def fig_15_rank_heatmaps(regimes_data, time_spans_dict, out_path, dpi=200):
 
             ax.set_xlabel("segment time span" if i == n_regimes - 1 else "")
             ax.set_ylabel("filtration radius" if rank == 0 else "")
-            ax.set_title(f"{regime} rank-{rank}", fontsize=10)
+            title_base = format_panel_title(regime, system_config, data_dict)
+            ax.set_title(f"{title_base} rank-{rank}", fontsize=10)
 
     # Shared colorbar
     cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
@@ -556,16 +615,23 @@ def fig_15_rank_heatmaps(regimes_data, time_spans_dict, out_path, dpi=200):
 # Main Pipeline
 # ============================================================================
 
-def load_all_data(data_root, prefix, eval_radius_suffix=""):
+def load_all_data(data_root, system_config, eval_radius_suffix=""):
     """Load all CSV and heatmap data for all regimes.
 
+    Args:
+        data_root: root directory for CSV files (e.g., data/roessler/signatures)
+        system_config: SystemConfig instance
+        eval_radius_suffix: optional suffix for multi-radius variants
+
     Returns:
-        list of dicts, one per regime, with keys:
+        tuple: (list of dicts, time_spans_dict)
+        Each dict has keys:
         - rank_at_radius: dict or None
         - rank1_spaces: (spaces, counts_dict)
         - rank2_spaces: (spaces, counts_dict)
         - inclusion: dict or None
         - rank0_heatmap, rank1_heatmap, rank2_heatmap: (radii, lengths, counts)
+        - param_value: system parameter value from npz meta (or None)
     """
     regimes_data = []
     time_spans_dict = {}
@@ -574,7 +640,7 @@ def load_all_data(data_root, prefix, eval_radius_suffix=""):
         data_dict = {}
 
         # Build file paths
-        base_prefix = f"subsegments_{prefix}_{regime}"
+        base_prefix = f"subsegments_{system_config.prefix}_{regime}"
         if eval_radius_suffix:
             # Accept both "r0p8" (as the driver writes it) and bare "0p8".
             s = eval_radius_suffix
@@ -587,7 +653,7 @@ def load_all_data(data_root, prefix, eval_radius_suffix=""):
         rank2_spaces_path = os.path.join(data_root, f"{base_prefix}_rank2_spaces_at_radius{suffix}.csv")
         inclusion_path = os.path.join(data_root, f"{base_prefix}_s21_inclusion{suffix}.csv")
         # npz lifts live one level above the signatures/ subdirectory
-        npz_path = os.path.join(os.path.dirname(data_root), f"{prefix}_{regime}.npz")
+        npz_path = os.path.join(os.path.dirname(data_root), f"{system_config.prefix}_{regime}.npz")
         metadata_path = os.path.join(data_root, f"{base_prefix}_metadata.txt")
 
         # Load rank_at_radius
@@ -611,16 +677,21 @@ def load_all_data(data_root, prefix, eval_radius_suffix=""):
             hmap_data = load_rank_heatmap_csv(hmap_path)
             data_dict[f"rank{rank}_heatmap"] = hmap_data
 
-        # Get dt and stride to compute time spans
+        # Get dt, stride, and system parameter to compute time spans
         dt = 0.02  # Default
         stride = 1  # Default
+        param_value = None
         try:
             meta = load_json_from_npz(npz_path)
             dt = meta.get("dt", dt)
+            param_value = meta.get(system_config.param_key)
         except Exception as e:
-            print(f"Warning: Could not read dt from {npz_path}: {e}")
+            print(f"Warning: Could not read npz {npz_path}: {e}")
 
         stride = read_stride_from_metadata(metadata_path)
+
+        # Store parameter value for use in title formatting
+        data_dict["param_value"] = param_value
 
         # Compute time spans from segment_length
         segment_lengths = np.array(rank_dict["segment_length"])
@@ -637,9 +708,15 @@ def main():
         description="Generate cycling-signature matplotlib reproductions (Figs 10, 11, 13, 14, 15)"
     )
     parser.add_argument(
+        "--system",
+        choices=list(SYSTEM_CONFIGS.keys()),
+        default="roessler",
+        help="Hybrid system to analyze (default: roessler)",
+    )
+    parser.add_argument(
         "--data-root",
         default="/Users/bdoprad/Work/Projects/hybrid-cycling-signatures/code/period_doubling/data",
-        help="Root data directory containing roessler/ subdirectory",
+        help="Root data directory containing system-specific subdirectories",
     )
     parser.add_argument(
         "--fig-dir",
@@ -653,7 +730,11 @@ def main():
     )
     args = parser.parse_args()
 
-    data_root = os.path.join(args.data_root, "roessler", "signatures")
+    # Get system configuration
+    system_config = SYSTEM_CONFIGS[args.system]
+
+    # Construct data path using system-specific subdirectory
+    data_root = os.path.join(args.data_root, system_config.data_subdir, "signatures")
     fig_dir = args.fig_dir
 
     os.makedirs(fig_dir, exist_ok=True)
@@ -664,37 +745,59 @@ def main():
         print("This is expected if cycling signatures have not been computed yet.")
         return
 
-    print(f"Loading signatures from {data_root}")
+    # Multi-radius driver runs write only suffixed outputs (_r0p5 etc.). If no
+    # suffix was requested and no unsuffixed files exist, auto-detect the
+    # available suffixes and use the largest radius (the r_max convention).
+    if not args.eval_radius_suffix:
+        import glob
+        import re
+        unsuffixed = glob.glob(os.path.join(
+            data_root, f"subsegments_{system_config.prefix}_*_rank_at_radius.csv"))
+        if not unsuffixed:
+            found = set()
+            for p in glob.glob(os.path.join(
+                    data_root, f"subsegments_{system_config.prefix}_*_rank_at_radius_r*.csv")):
+                m = re.search(r"_rank_at_radius_(r[0-9p]+)\.csv$", p)
+                if m:
+                    found.add(m.group(1))
+            if found:
+                def suffix_radius(s):
+                    return float(s[1:].replace("p", "."))
+                args.eval_radius_suffix = max(found, key=suffix_radius)
+                print(f"No unsuffixed outputs found; using detected eval-radius "
+                      f"suffix {args.eval_radius_suffix}")
 
-    # Use "roessler" as the prefix
-    regimes_data, time_spans_dict = load_all_data(data_root, "roessler", args.eval_radius_suffix)
+    print(f"Loading {args.system} signatures from {data_root}")
+
+    # Load all data using system config
+    regimes_data, time_spans_dict = load_all_data(data_root, system_config, args.eval_radius_suffix)
 
     # Check if we got any data
     if all(d is None for d in regimes_data):
         print("Error: No valid regime data loaded. Exiting.")
         return
 
-    # Generate figures
+    # Generate figures with suffix if specified
     if args.eval_radius_suffix:
         s = args.eval_radius_suffix
         suffix = "_" + s if s.startswith("r") else "_r" + s
     else:
         suffix = ""
 
-    fig10_path = os.path.join(fig_dir, f"roessler_fig10_rank_stacked{suffix}.png")
-    fig_10_rank_stacked(regimes_data, time_spans_dict, fig10_path)
+    fig10_path = os.path.join(fig_dir, f"{system_config.fig_prefix}fig10_rank_stacked{suffix}.png")
+    fig_10_rank_stacked(regimes_data, time_spans_dict, fig10_path, system_config)
 
-    fig11_path = os.path.join(fig_dir, f"roessler_fig11_sig1_stacked{suffix}.png")
-    fig_11_sig1_stacked(regimes_data, time_spans_dict, fig11_path)
+    fig11_path = os.path.join(fig_dir, f"{system_config.fig_prefix}fig11_sig1_stacked{suffix}.png")
+    fig_11_sig1_stacked(regimes_data, time_spans_dict, fig11_path, system_config)
 
-    fig13_path = os.path.join(fig_dir, f"roessler_fig13_sig2_stacked{suffix}.png")
-    fig_13_sig2_stacked(regimes_data, time_spans_dict, fig13_path)
+    fig13_path = os.path.join(fig_dir, f"{system_config.fig_prefix}fig13_sig2_stacked{suffix}.png")
+    fig_13_sig2_stacked(regimes_data, time_spans_dict, fig13_path, system_config)
 
-    fig14_path = os.path.join(fig_dir, f"roessler_fig14_inclusion{suffix}.png")
-    fig_14_inclusion_graphs(regimes_data, fig14_path)
+    fig14_path = os.path.join(fig_dir, f"{system_config.fig_prefix}fig14_inclusion{suffix}.png")
+    fig_14_inclusion_graphs(regimes_data, fig14_path, system_config)
 
-    fig15_path = os.path.join(fig_dir, f"roessler_fig15_rank_heatmaps{suffix}.png")
-    fig_15_rank_heatmaps(regimes_data, time_spans_dict, fig15_path)
+    fig15_path = os.path.join(fig_dir, f"{system_config.fig_prefix}fig15_rank_heatmaps{suffix}.png")
+    fig_15_rank_heatmaps(regimes_data, time_spans_dict, fig15_path, system_config)
 
     print(f"All figures generated in {fig_dir}")
 
