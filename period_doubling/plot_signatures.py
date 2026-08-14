@@ -75,6 +75,14 @@ SYSTEM_CONFIGS = {
         param_key="phi_deg",
         param_format_fn=lambda v: f"$\\phi$ = {v:.2f}$^\\circ$"
     ),
+    "compass_latent": SystemConfig(
+        prefix="compass",
+        data_subdir="compass_gait_latent",
+        fig_prefix="compass_latent_",
+        suptitle="Compass gait (latent suspension lift)",
+        param_key="phi_deg",
+        param_format_fn=lambda v: f"$\\phi$ = {v:.2f}$^\\circ$"
+    ),
 }
 RANK_COLORS = {
     0: "#d3d3d3",  # light gray

@@ -1,0 +1,6 @@
+system,regime,parameter,expected_period,detected_clusters,ok,n_samples,dt,t_span,n_impacts
+compass,period1,phi=4.00deg,1,1,TRUE,80001,0.005,400.0,534
+compass,period2,phi=4.75deg,2,2,TRUE,80001,0.005,400.0,532
+compass,period4,phi=5.00deg,4,4,TRUE,80001,0.005,400.0,533
+compass,period8,phi=5.02deg,8,8,TRUE,80001,0.005,400.0,532
+compass,chaos,phi=5.20deg,,116,TRUE,80001,0.005,400.0,531

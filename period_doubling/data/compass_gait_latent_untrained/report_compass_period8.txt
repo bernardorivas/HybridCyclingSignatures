@@ -1,0 +1,35 @@
+Latent suspension lift: compass_period8
+========================================================
+source npz: /Users/bdoprad/Work/Projects/hybrid-cycling-signatures/code/period_doubling/data/compass_gait/compass_period8.npz
+model: /Users/bdoprad/Work/Projects/hybrid-cycling-signatures/code/chyll_v2/runs/compass_gait_phi_3_5.02deg
+latent_dim: 11  lift shape: (24257, 11)
+arc samples: 20001  bridge samples: 4256 (532 impacts x n_s=8, auto suggestion 8)
+median arc step: 2.3590e-01  median bridge length: 9.9987e-01
+
+Consecutive latent gaps (pre-stride)
+  all:   mean=2.446e-01 median=2.162e-01 p95=2.801e-01 max=3.222e+00
+
+Symbolic gluing errors ||E(g,1) - E(r(g),0)|| over all impacts
+  mean=2.627e+00 median=2.710e+00 p95=3.034e+00 max=3.034e+00
+
+Reconstruction D(E(x,s)) vs augmented input
+  arcs:    mean=9.396e-04 median=9.436e-04 p95=1.163e-03 max=1.176e-03
+  bridges: mean=7.355e-04 median=7.339e-04 p95=7.533e-04 max=7.600e-04
+
+JVP vs tag-aware FD tangent |cos| agreement
+  arcs:    mean=9.961e-01 median=9.999e-01 p95=9.999e-01 max=9.999e-01
+  bridges: mean=1.000e+00 median=1.000e+00 p95=1.000e+00 max=1.000e+00
+  (tiny repairs: jvp=0 fd=0)
+
+Latent coordinate ranges
+  z0: [-0.43094, 0.53339] span=0.964331
+  z1: [-0.430695, 0.255141] span=0.685836
+  z2: [-2.83316, 2.70015] span=5.53331
+  z3: [-1.84576, -0.378015] span=1.46774
+  z4: [0.000101817, 0.889098] span=0.888996
+  z5: [-0.000385387, 5.00306e-06] span=0.000390391
+  z6: [-0.000100766, 0.000233065] span=0.000333831
+  z7: [-0.000525148, 0.000177046] span=0.000702194
+  z8: [4.19375e-05, 0.000841777] span=0.000799839
+  z9: [-0.00107722, 0.000252439] span=0.00132966
+  z10: [-0.000459741, 1.9201e-06] span=0.000461661

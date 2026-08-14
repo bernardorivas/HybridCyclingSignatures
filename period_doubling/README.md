@@ -228,6 +228,91 @@ Observed `beta1_Y` (first Betti number of the ambient cubical complex at boxsize
 
 Result: in period1, period4, period8, and chaos the ambient complex carries no 1-cycles at all, so every subsegment has cycling rank 0 at all three evaluation radii — vanilla cycling signatures on the raw hybrid state see no cycling, because the reset discontinuity prevents the arcs from closing. This is the negative-control baseline for the forthcoming suspension-embedding comparison, where the same data lifted to the suspension is expected to exhibit the period-doubling cascade. One caveat: in the period2 regime the boxsize-0.3 cover incidentally closes a single loop (`beta1_Y = 1`), and rank 1 then dominates for segment time spans above roughly 1 at all three radii (rank-1 fractions 3907/4500, 4001/4500, 4018/4500 at r = 0.1, 0.2, 0.3); this is a resolution artifact of the cubical cover closing a loop that the trajectory itself does not close, not a recovered hybrid cycle, and it is absent in the other four regimes. A box-size probe confirms the artifact reading: `beta1_Y` for period2 is 5, 3, 0, 1 at boxsize 0.15, 0.2, 0.25, 0.3 respectively (`signatures_pilot/probe_period2_*`) — non-monotone in the cover scale, unlike the Roessler comparison spaces, which are stable across box sizes. On raw hybrid data the vanilla method thus produces both a false negative (the genuine period-1 limit cycle is invisible because its arc never closes) and a scale-unstable false positive (period2).
 
+## Latent suspension lifts (positive hybrid computation)
+
+`export_latent_lifts.py` lifts the SAME compass-gait trajectories used for the
+raw negative control into the continuous latent suspension space of the
+per-slope trained CHyLL v2 models (`chyll_v2/runs/compass_gait_phi*`, 11-dim
+latent). Flow samples enter as augmented states (x, s=0); at each recorded
+impact a mapping-cylinder bridge (jump_minus, s), s in (0,1), n_s = 8 samples,
+is inserted, so the lift is a single continuous polyline once the learned
+gluing E(g,1) = E(r(g),0) holds. Every sample (arc or bridge) costs one dt of
+suspension time. Tangents are the encoder pushforward (JVP) of the physical
+unit tangents (arcs) and of e_s (bridges); a tag-aware finite-difference
+tangent set is written alongside as a cross-check (mean |cos| agreement
+>= 0.99; learned latent vector field agrees with the JVP tangents at
+mean |cos| 0.97-0.99). period1 uses the phi=0.07 rad (4.0107 deg) model on
+4.00 deg data (mismatch 2e-4 rad, noted in the report).
+
+Model map: period1 -> phi007, period2 -> phi_1, period4 -> phi_2,
+period8 -> phi_3, chaos -> phi_4_cloud.
+
+Diagnostics per regime (`report_compass_{regime}.txt`): symbolic gluing seam
+errors 0.072-0.128 (about a quarter to a third of the median latent arc step
+0.29); reconstruction error concentrates on just-post-impact samples, the
+expected quotient effect (decoder must choose a seam preimage); only the
+encoder enters the signature computation.
+
+Pilot (`julia/pilot_beta1_latent.jl`): beta_1(Y) = 1 for ALL five regimes,
+stable across boxsizes 0.3-1.0 and strides 1-2 — the suspension closes the
+loop the raw hybrid state cannot (raw: beta_1 = 0), with none of the raw
+period2 scale instability.
+
+Production runs (2026-08-13): boxsize 0.45, sb-radius 1, stride 1, segment
+lengths 20:20:800, n-runs 150, eval radii 0.1/0.15/0.3/0.45; outputs in
+`data/compass_gait_latent/signatures/`, figures
+`figures/compass_latent_fig{10,11,13,14,15}_r*.png`.
+
+Results:
+- beta_1(Y) = 1 in every regime; a single 1-dim cycling space V1 everywhere
+  (rank never exceeds 1, consistent with the suspension carrying one closed
+  orbit per regime).
+- The cascade discriminator is the minimal closing length: at eval radii in
+  the resolving band r in [0.09, 0.14], rank-1 onset (>=135/150 runs) is
+  60 / 100 / 160 / 220 samples for period1/2/4/8, i.e. about 1.3 / 2.2 /
+  3.5 / 4.8 strides — the tau_min staircase. period8 is only partially
+  resolved: its branch separation (~0.02 latent) lies below the reachable
+  radius floor.
+- Radius floor: below r ~ 0.09 periodic regimes stop closing entirely
+  (sampling-phase drift: returns miss sampled points by up to half a latent
+  sample step ~0.15). Chaos is qualitatively distinct — its rank-1 boundary
+  is ragged and descends toward r -> 0 at long segment spans (recurrence),
+  where periodic regimes are hard rank-0.
+- Untrained-encoder control (`--untrained`, same architecture, seed 0, same
+  bridge construction): seam gap 2.3-3.2 (the physical state jump, unglued),
+  beta_1(Y) = 0, rank 0 at all lengths and radii
+  (`data/compass_gait_latent_untrained/`). Together with the raw control this
+  isolates the TRAINED gluing as the operative ingredient.
+
+### Fine variant (dt = 0.005) — Roessler-comparable figures
+
+The dt = 0.02 lift caps the analysis in the fully-merged regime: latent arc
+steps ~0.29 force boxsize >= ~0.3, every doubled branch merges, beta_1(Y) = 1
+everywhere, rank never exceeds 1, and figs 13/14 are empty — visibly poorer
+than the Roessler set. The dt = 0.005 regeneration (`data_fine/`, same ICs
+and t_span; arc steps ~0.072, max gap 0.14; uniform n_s = 26) lowers the
+usable boxsize to 0.2 and lands in the partially-resolved regime the Roessler
+study occupies.
+
+Production (2026-08-13): boxsize 0.2, sb-radius 1, stride 2, lengths
+40:40:1600, n-runs 150, eval radii 0.05/0.1/0.15/0.2; outputs in
+`data_fine/compass_gait_latent/signatures/`, figures in `figures_fine/`.
+
+Results (cf. Roessler at boxsize 1.5: beta_1 = 1/2/5/3/2):
+- beta_1(Y) = 1 / 4 / 2 / 4 / 1 for period1/2/4/8/chaos, stable at strides
+  1-2; 4/4/9 at boxsize 0.15.
+- Rank takeovers mirror the Roessler figures: period1 saturates at rank 1
+  (tau ~ 1); period2 passes rank 1 -> rank 2 -> rank 3 (tau ~ 2.5 and ~5-6 at
+  r = 0.1); period4 and period8 saturate at rank 2 from tau ~ 2.5-3; the
+  fig15 heatmaps show the nested rank-1/rank-2 staircase tiers with
+  radius-dependent onsets.
+- Multiple 1-dim cycling spaces (V1-V3) appear in the pre-saturation band
+  and the V -> W inclusion graphs (fig14) are nontrivial for period2/4/8;
+  period1 and chaos have a single V1 and no rank-2 segments.
+- Chaos differs from Roessler chaos: its latent band does not fragment at
+  boxsize >= 0.1 (beta_1 stays 1), so it keeps the rank <= 1
+  recurrence-limited diffuse boundary instead of a rank-1/2 mixture.
+
 ## References
 
 - Roessler, O. E. (1976). "An equation for continuous chaos." *Phys. Lett. A*, 57(5), 397–398.
