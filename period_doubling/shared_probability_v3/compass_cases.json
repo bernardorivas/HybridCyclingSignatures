@@ -1,0 +1,56 @@
+{
+  "schema_version": 3,
+  "analysis_id": "compass_refined_v3_probability_linf_C0p75",
+  "protocol": "compass_protocol.json",
+  "bundle_manifest": "../../experiments_planned/outputs/compass_embedded_fourier_orbits_v3_refined/bundle_manifest.json",
+  "suggested_output_root": "experiments_planned/outputs/shared_coauthor_protocol/compass_refined_v3_probability_linf_C0p75",
+  "figure_filename": "compassgait_C0p75.pdf",
+  "summary_directory": "compact_summary_v1",
+  "cases": [
+    {
+      "id": "period1",
+      "title": "phi = 4.00 deg",
+      "phi_deg": 4.0,
+      "q": 1,
+      "refined_continuous_period": 0.878246991978623,
+      "legacy_nominal_suspension_period": 0.88,
+      "physical_return_seconds": 0.7482409701092134
+    },
+    {
+      "id": "period2",
+      "title": "phi = 4.75 deg",
+      "phi_deg": 4.75,
+      "q": 2,
+      "refined_continuous_period": 1.762130681818183,
+      "legacy_nominal_suspension_period": 1.76,
+      "physical_return_seconds": 1.5021396458781595
+    },
+    {
+      "id": "period4",
+      "title": "phi = 5.00 deg",
+      "phi_deg": 5.0,
+      "q": 4,
+      "refined_continuous_period": 3.521923462566852,
+      "legacy_nominal_suspension_period": 3.52,
+      "physical_return_seconds": 3.0019139378989905
+    },
+    {
+      "id": "period8",
+      "title": "phi = 5.02 deg",
+      "phi_deg": 5.02,
+      "q": 8,
+      "refined_continuous_period": 7.044294786096257,
+      "legacy_nominal_suspension_period": 7.045,
+      "physical_return_seconds": 6.004311980796729
+    },
+    {
+      "id": "chaos",
+      "title": "phi = 5.20 deg",
+      "phi_deg": 5.2,
+      "q": null,
+      "refined_continuous_period": null,
+      "legacy_nominal_suspension_period": null,
+      "physical_return_seconds": null
+    }
+  ]
+}

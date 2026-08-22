@@ -1,0 +1,31 @@
+{
+  "schema_version": 3,
+  "protocol_id": "compass_refined_v3_probability_linf_C0p75",
+  "statistic": "P(rank > 0)",
+  "segment_lengths": {
+    "start": 160,
+    "step": 80,
+    "stop": 9600
+  },
+  "n_runs": 20,
+  "sampling": "independent_uniform_with_replacement_per_length",
+  "paired_starts_across_equal_length_streams": true,
+  "seed": 20260820,
+  "duration_convention": "segment_length_times_effective_dt",
+  "effective_sample_dt": 0.00125,
+  "tangent_normalization": "linf",
+  "position_boxsize": 0.75,
+  "sphere_box_resolution": 1,
+  "metric_c": 0.75,
+  "r_min": 0.0,
+  "r_max": 0.5,
+  "r_step": 0.002,
+  "r_subdivisions": 251,
+  "field_prime": 43,
+  "curve_bound_target": 0.18,
+  "require_sample_radius_below_r_max": true,
+  "require_beta1_y": 1,
+  "require_no_exact_full_period_recurrence": true,
+  "plot_horizontal_radius_guide": false,
+  "plot_vertical_refined_period_guides": true
+}
