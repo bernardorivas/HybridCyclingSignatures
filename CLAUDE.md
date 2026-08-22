@@ -54,7 +54,6 @@ scripts/              # Entry points -- all prepend src/ to sys.path
   generate_series.py  # Long time-series generation + error analysis (rimless)
   generate_series_compass.py  # Same for compass gait
   hybrid_manifold.py  # Izhikevich neuron demo (separate hybrid system, illustrative)
-  temp/               # Throwaway debugging scripts (limit-cycle finders, physics debuggers)
 figures/              # Output PNG/PDF figures (rimless_wheel/, compass_gait/)
 runs/                 # Saved model.pt files (rimless_wheel/, compass_gait/)
 data/                 # Generated .npy/.csv datasets + error reports
