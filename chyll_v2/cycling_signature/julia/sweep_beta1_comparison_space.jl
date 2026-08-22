@@ -9,7 +9,7 @@
 # Output CSV columns: boxsize, sb_radius, C, beta1_Y, n_cells, n_pts.
 #
 # Usage:
-#   julia --project="time series/cycling_signature" \
+#   julia --project="period_doubling/julia" \
 #     chyll_v2/cycling_signature/julia/sweep_beta1_comparison_space.jl \
 #     --data-dir chyll_v2/cycling_signature/data/bouncing_ball \
 #     --base continuous_lift_chyll_v2_bb_phaseB \
@@ -19,7 +19,7 @@
 #     --out subsegments_chyll_v2_bb_phaseB_beta1_sweep.csv
 
 import Pkg
-Pkg.activate(joinpath(@__DIR__, "..", "..", "..", "time series", "cycling_signature"))
+Pkg.activate(joinpath(@__DIR__, "..", "..", "..", "period_doubling", "julia"))
 
 using CyclingSignatures
 using DelimitedFiles

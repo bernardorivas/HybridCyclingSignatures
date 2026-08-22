@@ -110,11 +110,15 @@ The exported position/tangent pairs already match the input format of
 `run_subsegments.jl`.  For example:
 
 ```bash
-julia --project="time series/cycling_signature" \
+julia --project="period_doubling/julia" \
   chyll_v2/cycling_signature/julia/run_subsegments.jl \
   --data-dir chyll_v2/cycling_signature/data/compass_gait_goswami_csv/period2 \
   --base continuous_lift_goswami_period2_vfield
 ```
+
+Use the locked `period_doubling/julia` project; the Manifest beside the
+historical `time series/cycling_signature` runner contains Windows paths and
+must not be resolved on this checkout.
 
 Change `period2` in both places to `period1`, `period4`, `period8`, or
 `chaos` for the other systems.

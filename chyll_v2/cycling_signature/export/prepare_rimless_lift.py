@@ -1,14 +1,14 @@
 """Export CHyLL v2 rimless-wheel latent data for cycling signatures.
 
 This writes the position and unit-tangent CSV files expected by
-``time series/cycling_signature/run_cycling_signature.jl``. It is deliberately
+``chyll_v2/cycling_signature/julia/run_subsegments.jl``. It is deliberately
 standalone from ``src/``: the simulator and network classes are imported only
 from ``chyll_v2``.
 
 Usage:
     python chyll_v2/cycling_signature/export/prepare_rimless_lift.py
-    julia --project="time series/cycling_signature" \
-        "time series/cycling_signature/run_cycling_signature.jl" \
+    julia --project="period_doubling/julia" \
+        chyll_v2/cycling_signature/julia/run_subsegments.jl \
         --data-dir chyll_v2/cycling_signature/data/rimless_wheel \
         --base continuous_lift_chyll_v2
 """

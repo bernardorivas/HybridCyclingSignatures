@@ -12,25 +12,17 @@
 # Defaults: data_dir = data/compass_gait, base = continuous_lift_analytic.
 #
 # Usage:
-#   julia --project="time series/cycling_signature" "time series/cycling_signature/run_cycling_signature.jl"
-#   julia --project="time series/cycling_signature" "time series/cycling_signature/run_cycling_signature.jl" --suffix _eta2
-#   julia --project="time series/cycling_signature" "time series/cycling_signature/run_cycling_signature.jl" \
+#   julia --project="period_doubling/julia" "time series/cycling_signature/run_cycling_signature.jl"
+#   julia --project="period_doubling/julia" "time series/cycling_signature/run_cycling_signature.jl" --suffix _eta2
+#   julia --project="period_doubling/julia" "time series/cycling_signature/run_cycling_signature.jl" \
 #       --data-dir data/rimless_wheel --base continuous_lift_relaxed
 
 import Pkg
-Pkg.activate(@__DIR__)
-
 REPO_ROOT = abspath(joinpath(@__DIR__, "..", ".."))
-CS_LOCAL = joinpath(REPO_ROOT, "local_docs", "CyclingSignatures.jl-main", "CyclingSignatures.jl-main")
-
-if !isfile(joinpath(@__DIR__, "Manifest.toml"))
-    println("First run: installing deps (may download packages; ~1-5 min) ...")
-    # StepFunctions.jl is an unregistered dep of CyclingSignatures; must be added by URL FIRST.
-    Pkg.add(url="https://github.com/davidhien/StepFunctions.jl")
-    # Then develop CyclingSignatures from the local source tree.
-    Pkg.develop(path=CS_LOCAL)
-    Pkg.instantiate()
-end
+PROJECT_DIR = joinpath(REPO_ROOT, "period_doubling", "julia")
+isfile(joinpath(PROJECT_DIR, "Manifest.toml")) ||
+    error("Missing locked Julia environment: $(joinpath(PROJECT_DIR, \"Manifest.toml\"))")
+Pkg.activate(PROJECT_DIR)
 
 using CyclingSignatures
 using DelimitedFiles

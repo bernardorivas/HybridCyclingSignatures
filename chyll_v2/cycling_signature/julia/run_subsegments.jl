@@ -16,7 +16,7 @@
 #   subsegments_{base}_metadata.txt
 #
 # Usage:
-#   julia --project="time series/cycling_signature" \
+#   julia --project="period_doubling/julia" \
 #     chyll_v2/cycling_signature/julia/run_subsegments.jl \
 #     --data-dir chyll_v2/cycling_signature/data/rimless_wheel \
 #     --base continuous_lift_chyll_v2 \
@@ -24,7 +24,7 @@
 #     --segment-lengths 20:10:300 --n-runs 200
 
 import Pkg
-Pkg.activate(joinpath(@__DIR__, "..", "..", "..", "time series", "cycling_signature"))
+Pkg.activate(joinpath(@__DIR__, "..", "..", "..", "period_doubling", "julia"))
 
 using CyclingSignatures
 using DelimitedFiles
