@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "protocol_id": "coauthor_roessler_probability_literal_linf_v1",
+  "source_note": "paper/hybrid_cyclingsignatures/period doubling roessler/period-doubling.tex",
+  "field_prime": 43,
+  "segment_lengths": {
+    "start": 100,
+    "step": 20,
+    "stop": 1200
+  },
+  "n_runs": 20,
+  "sampling": "independent_uniform_with_replacement",
+  "seed": 20260820,
+  "duration_convention": "segment_length_times_effective_dt",
+  "effective_sample_dt": 0.01,
+  "tangent_normalization": "linf",
+  "position_boxsize": 5.0,
+  "sphere_box_resolution": 1,
+  "metric_c": 5.0,
+  "r_max": 5.0,
+  "r_subdivisions": 201,
+  "horizontal_radius_guide": "sample_radius",
+  "require_sample_radius_below_r_max": true,
+  "documented": [
+    "Rössler b=0.2 and a in {2.82,2.86}",
+    "fixed-step fourth-order Runge-Kutta with dt=0.01",
+    "final time T=3000 and discard the first 2000 integration steps",
+    "20 random segments at each length 100:20:1200",
+    "probability is the fraction with nontrivial cycling signature",
+    "spatial cover side 5, tangent cover side 1, coefficients F_43"
+  ],
+  "explicit_reproducibility_assumptions": [
+    "The RNG seed is absent from the coauthor note; this profile freezes 20260820.",
+    "The exact radius grid is absent; 201 points on [0,5] are inferred from the raster.",
+    "The note specifies the 5Q1 by Q2 cover but not a numeric dynamic-metric coefficient; C=5 follows the cited implementation's cover convention.",
+    "The note says random segments but does not state replacement semantics; independent uniform starts with replacement follow the cited local implementation.",
+    "Every case reuses the same seed, so cases with equal analysis length receive paired start-index draws rather than independent cross-case draws.",
+    "The radius grid includes r=C=5 for visual fidelity even though the cited admissible interval is written [0,C); the endpoint is descriptive only.",
+    "This primary profile follows the note's literal l-infinity-normalized lift. The cited implementation instead uses l2-unit metric directions and maps them to the l-infinity sphere only for the cubical cover; coauthor_protocol_l2_compatibility.json records that explicit sensitivity profile.",
+    "The initial state is absent from the coauthor note; the Rössler case file freezes (1,1,0).",
+    "Discarding the first 2000 integration steps is interpreted as retaining the state after update 2000; the original endpoint convention is not recorded.",
+    "The panel-specific horizontal guide is inferred to be the sample radius R_Gamma defined immediately before the coauthor experiment; its precise original meaning is not recorded, and the reconstructed values do not exactly match the raster guide positions.",
+    "The coauthor labels a length-L window by L*dt, although its endpoint span is (L-1)*dt.",
+    "The original cubical-grid origin and boundary tie rule are not recorded; the local CyclingSignatures.jl centered-grid rounding convention is used."
+  ]
+}

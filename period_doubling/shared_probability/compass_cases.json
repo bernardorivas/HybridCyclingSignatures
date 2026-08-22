@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "analysis_id": "fine_compass_frozen_path_flow_direction_control_under_coauthor_protocol",
+  "protocol": "coauthor_protocol.json",
+  "figure_filename": "compassgait_C5p0.pdf",
+  "cases": [
+    {
+      "id": "period1",
+      "title": "phi = 4.00 deg",
+      "sample_dt": 0.005,
+      "stride": 2,
+      "source": {
+        "kind": "existing_lift",
+        "positions": "period_doubling/data_fine/compass_gait_latent/compass_period1_positions.csv",
+        "tangents": "experiments_planned/outputs/fine_compass_learned_flow_tangents_v2/compass_period1_tangents.csv",
+        "tangent_provenance": "experiments_planned/outputs/fine_compass_learned_flow_tangents_v2/provenance.json",
+        "source_role": "learned_flow_direction_on_frozen_encoded_path"
+      },
+      "display": {
+        "kind": "analysis_positions_3d",
+        "maximum_points": 5000
+      }
+    },
+    {
+      "id": "period2",
+      "title": "phi = 4.75 deg",
+      "sample_dt": 0.005,
+      "stride": 2,
+      "source": {
+        "kind": "existing_lift",
+        "positions": "period_doubling/data_fine/compass_gait_latent/compass_period2_positions.csv",
+        "tangents": "experiments_planned/outputs/fine_compass_learned_flow_tangents_v2/compass_period2_tangents.csv",
+        "tangent_provenance": "experiments_planned/outputs/fine_compass_learned_flow_tangents_v2/provenance.json",
+        "source_role": "learned_flow_direction_on_frozen_encoded_path"
+      },
+      "display": {
+        "kind": "analysis_positions_3d",
+        "maximum_points": 5000
+      }
+    },
+    {
+      "id": "period4",
+      "title": "phi = 5.00 deg",
+      "sample_dt": 0.005,
+      "stride": 2,
+      "source": {
+        "kind": "existing_lift",
+        "positions": "period_doubling/data_fine/compass_gait_latent/compass_period4_positions.csv",
+        "tangents": "experiments_planned/outputs/fine_compass_learned_flow_tangents_v2/compass_period4_tangents.csv",
+        "tangent_provenance": "experiments_planned/outputs/fine_compass_learned_flow_tangents_v2/provenance.json",
+        "source_role": "learned_flow_direction_on_frozen_encoded_path"
+      },
+      "display": {
+        "kind": "analysis_positions_3d",
+        "maximum_points": 5000
+      }
+    },
+    {
+      "id": "period8",
+      "title": "phi = 5.02 deg",
+      "sample_dt": 0.005,
+      "stride": 2,
+      "source": {
+        "kind": "existing_lift",
+        "positions": "period_doubling/data_fine/compass_gait_latent/compass_period8_positions.csv",
+        "tangents": "experiments_planned/outputs/fine_compass_learned_flow_tangents_v2/compass_period8_tangents.csv",
+        "tangent_provenance": "experiments_planned/outputs/fine_compass_learned_flow_tangents_v2/provenance.json",
+        "source_role": "learned_flow_direction_on_frozen_encoded_path"
+      },
+      "display": {
+        "kind": "analysis_positions_3d",
+        "maximum_points": 5000
+      }
+    },
+    {
+      "id": "chaos",
+      "title": "phi = 5.20 deg",
+      "sample_dt": 0.005,
+      "stride": 2,
+      "source": {
+        "kind": "existing_lift",
+        "positions": "period_doubling/data_fine/compass_gait_latent/compass_chaos_positions.csv",
+        "tangents": "experiments_planned/outputs/fine_compass_learned_flow_tangents_v2/compass_chaos_tangents.csv",
+        "tangent_provenance": "experiments_planned/outputs/fine_compass_learned_flow_tangents_v2/provenance.json",
+        "source_role": "learned_flow_direction_on_frozen_encoded_path"
+      },
+      "display": {
+        "kind": "analysis_positions_3d",
+        "maximum_points": 5000
+      }
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "analysis_id": "five_regime_roessler_under_coauthor_protocol",
+  "protocol": "coauthor_protocol.json",
+  "figure_filename": "roessler_C5p0.pdf",
+  "cases": [
+    {
+      "id": "period1",
+      "title": "c = 4.0",
+      "sample_dt": 0.01,
+      "stride": 1,
+      "source": {
+        "kind": "roessler_rk4",
+        "linear_y": 0.1,
+        "z_offset": 0.1,
+        "z_control": 4.0,
+        "initial_state": [1.0, 1.0, 0.0],
+        "final_time": 3000.0,
+        "discard_steps": 2000,
+        "initial_state_status": "documented_local_five_regime_initial_state"
+      },
+      "display": {
+        "kind": "positions_3d",
+        "maximum_points": 5000
+      }
+    },
+    {
+      "id": "period2",
+      "title": "c = 6.0",
+      "sample_dt": 0.01,
+      "stride": 1,
+      "source": {
+        "kind": "roessler_rk4",
+        "linear_y": 0.1,
+        "z_offset": 0.1,
+        "z_control": 6.0,
+        "initial_state": [1.0, 1.0, 0.0],
+        "final_time": 3000.0,
+        "discard_steps": 2000,
+        "initial_state_status": "documented_local_five_regime_initial_state"
+      },
+      "display": {
+        "kind": "positions_3d",
+        "maximum_points": 5000
+      }
+    },
+    {
+      "id": "period4",
+      "title": "c = 8.5",
+      "sample_dt": 0.01,
+      "stride": 1,
+      "source": {
+        "kind": "roessler_rk4",
+        "linear_y": 0.1,
+        "z_offset": 0.1,
+        "z_control": 8.5,
+        "initial_state": [1.0, 1.0, 0.0],
+        "final_time": 3000.0,
+        "discard_steps": 2000,
+        "initial_state_status": "documented_local_five_regime_initial_state"
+      },
+      "display": {
+        "kind": "positions_3d",
+        "maximum_points": 5000
+      }
+    },
+    {
+      "id": "period8",
+      "title": "c = 8.7",
+      "sample_dt": 0.01,
+      "stride": 1,
+      "source": {
+        "kind": "roessler_rk4",
+        "linear_y": 0.1,
+        "z_offset": 0.1,
+        "z_control": 8.7,
+        "initial_state": [1.0, 1.0, 0.0],
+        "final_time": 3000.0,
+        "discard_steps": 2000,
+        "initial_state_status": "documented_local_five_regime_initial_state"
+      },
+      "display": {
+        "kind": "positions_3d",
+        "maximum_points": 5000
+      }
+    },
+    {
+      "id": "chaos",
+      "title": "c = 9.0",
+      "sample_dt": 0.01,
+      "stride": 1,
+      "source": {
+        "kind": "roessler_rk4",
+        "linear_y": 0.1,
+        "z_offset": 0.1,
+        "z_control": 9.0,
+        "initial_state": [1.0, 1.0, 0.0],
+        "final_time": 3000.0,
+        "discard_steps": 2000,
+        "initial_state_status": "documented_local_five_regime_initial_state"
+      },
+      "display": {
+        "kind": "positions_3d",
+        "maximum_points": 5000
+      }
+    }
+  ]
+}

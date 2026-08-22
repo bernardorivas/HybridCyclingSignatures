@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "analysis_id": "coauthor_roessler_a2p82_a2p86_reference",
+  "protocol": "coauthor_protocol.json",
+  "figure_filename": "roessler_coauthor_reference_C5p0.pdf",
+  "cases": [
+    {
+      "id": "a2p82",
+      "title": "a = 2.82",
+      "sample_dt": 0.01,
+      "stride": 1,
+      "expected_beta1": 1,
+      "source": {
+        "kind": "roessler_rk4",
+        "linear_y": 0.2,
+        "z_offset": 0.2,
+        "z_control": 2.82,
+        "initial_state": [1.0, 1.0, 0.0],
+        "final_time": 3000.0,
+        "discard_steps": 2000,
+        "initial_state_status": "assumed_missing_from_coauthor_note"
+      },
+      "display": {
+        "kind": "positions_3d",
+        "maximum_points": 5000
+      }
+    },
+    {
+      "id": "a2p86",
+      "title": "a = 2.86",
+      "sample_dt": 0.01,
+      "stride": 1,
+      "expected_beta1": 1,
+      "source": {
+        "kind": "roessler_rk4",
+        "linear_y": 0.2,
+        "z_offset": 0.2,
+        "z_control": 2.86,
+        "initial_state": [1.0, 1.0, 0.0],
+        "final_time": 3000.0,
+        "discard_steps": 2000,
+        "initial_state_status": "assumed_missing_from_coauthor_note"
+      },
+      "display": {
+        "kind": "positions_3d",
+        "maximum_points": 5000
+      }
+    }
+  ]
+}
