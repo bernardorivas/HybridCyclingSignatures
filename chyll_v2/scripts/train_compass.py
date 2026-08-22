@@ -29,6 +29,8 @@ from chyll_v2.chyll_v2.visualize import plot_loss_history, plot_rollout_vs_truth
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--smoke", action="store_true", help="tiny curriculum for sanity")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="override the deterministic training/data seed")
     parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--ode-method", type=str, default=None)
     parser.add_argument("--no-adjoint", action="store_true")
@@ -56,6 +58,8 @@ def main() -> int:
     args = parser.parse_args()
 
     cfg = make_default("compass_gait")
+    if args.seed is not None:
+        cfg.seed = args.seed
     slope_cfg = (
         GOSWAMI_COMPASS_SLOPE_CONFIGS[args.slope_config]
         if args.slope_config is not None
@@ -105,7 +109,7 @@ def main() -> int:
             cfg.run_dir = f"chyll_v2/runs/{run_name}"
             cfg.figure_dir = f"chyll_v2/figures/{run_name}"
 
-    print(f"[chyll_v2] system={cfg.system_name} device={cfg.device}")
+    print(f"[chyll_v2] system={cfg.system_name} device={cfg.device} seed={cfg.seed}")
     print(
         f"[chyll_v2] base_dim={cfg.base_dim} state_dim(aug)={cfg.state_dim} "
         f"latent_dim={cfg.latent_dim}"

@@ -26,6 +26,8 @@ from chyll_v2.chyll_v2.visualize import (
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--smoke", action="store_true", help="tiny curriculum for sanity")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="override the deterministic training/data seed")
     parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--ode-method", type=str, default=None)
     parser.add_argument("--no-adjoint", action="store_true")
@@ -52,6 +54,8 @@ def main() -> int:
     args = parser.parse_args()
 
     cfg = make_default("rimless_wheel")
+    if args.seed is not None:
+        cfg.seed = args.seed
     if args.device is not None:
         cfg.device = args.device
     if args.ode_method is not None:
@@ -81,7 +85,7 @@ def main() -> int:
         cfg.run_dir = "chyll_v2/runs/rimless_wheel_smoke"
         cfg.figure_dir = "chyll_v2/figures/rimless_wheel_smoke"
 
-    print(f"[chyll_v2] system={cfg.system_name} device={cfg.device}")
+    print(f"[chyll_v2] system={cfg.system_name} device={cfg.device} seed={cfg.seed}")
     print(
         f"[chyll_v2] base_dim={cfg.base_dim} state_dim(aug)={cfg.state_dim} "
         f"latent_dim={cfg.latent_dim}"

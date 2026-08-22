@@ -15,11 +15,13 @@ learns the same time scale as the data.
 from __future__ import annotations
 
 import json
+import random
 import time
 from dataclasses import asdict
 from pathlib import Path
 from typing import List
 
+import numpy as np
 import torch
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -42,6 +44,18 @@ def resolve_device(requested: str) -> torch.device:
     ):
         return torch.device("mps")
     return torch.device("cpu")
+
+
+def seed_training(seed: int) -> None:
+    """Apply one config seed to all RNGs used by training and loading."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    if getattr(torch.backends, "cudnn", None) is not None:
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
 
 
 def forward_step(
@@ -80,6 +94,7 @@ def train(
     trajectories: List[Trajectory],
     load_from: str | None = None,
 ) -> CHyLLv2Networks:
+    seed_training(cfg.seed)
     device = resolve_device(cfg.device)
     nets = CHyLLv2Networks(cfg).to(device)
     if load_from is not None:
@@ -115,6 +130,7 @@ def train(
                 batch_size=cfg.batch_size,
                 s_high=cfg.glue_s_high,
                 s_low=cfg.glue_s_low,
+                seed=cfg.seed,
             )
             integration_times = torch.linspace(
                 0.0, (horizon - 1) * cfg.tau, horizon, device=device

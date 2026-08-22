@@ -12,6 +12,7 @@ required at training time.
 """
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 from typing import List
 
@@ -149,6 +150,14 @@ def collate_slices(batch) -> SliceBatch:
     )
 
 
+def _seed_worker(worker_id: int) -> None:
+    """Seed NumPy/Python RNGs from the worker seed assigned by PyTorch."""
+    del worker_id
+    worker_seed = torch.initial_seed() % (2**32)
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+
+
 def make_slice_loader(
     trajectories: List[Trajectory],
     horizon: int,
@@ -156,6 +165,7 @@ def make_slice_loader(
     num_workers: int = 0,
     s_high: float = 0.9,
     s_low: float = 0.1,
+    seed: int | None = None,
 ) -> DataLoader:
     ds = TrajectorySliceDataset(
         trajectories=trajectories,
@@ -163,6 +173,13 @@ def make_slice_loader(
         s_high=s_high,
         s_low=s_low,
     )
+    generator = None
+    worker_init_fn = None
+    if seed is not None:
+        generator = torch.Generator()
+        generator.manual_seed(seed)
+        worker_init_fn = _seed_worker
+
     return DataLoader(
         ds,
         batch_size=batch_size,
@@ -170,6 +187,8 @@ def make_slice_loader(
         num_workers=num_workers,
         collate_fn=collate_slices,
         drop_last=True,
+        generator=generator,
+        worker_init_fn=worker_init_fn,
     )
 
 
