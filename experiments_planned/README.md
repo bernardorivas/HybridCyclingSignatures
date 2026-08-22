@@ -6,6 +6,15 @@
 > completed-run validation requires the corresponding local outputs or a
 > fresh rebuild from the documented materialization steps.
 
+Historical completed plans freeze Julia Manifest SHA-256
+`7e0472391bd0a41651e778eea7f7fb460f307ed61cfd7a678c3a9d550afb472a`.
+The current Manifest differs only by replacing its machine-local
+`CyclingSignatures.jl` path with the repository-relative path and therefore
+has a different hash. Strict checks of those historical local artifacts must
+use their frozen Manifest revision; new materializations use the portable one.
+The one-line migration is recorded in
+`period_doubling/julia/manifest_path_migration.json`.
+
 Most scripts here prepare items 7--10 from the top-level `next-steps.md` and
 remain unexecuted.  The fine-Compass duration/C planner, runner, manager, and
 renderer have now generated the completed tied metric/tangent-cover

@@ -5,6 +5,14 @@
 > Completed-run commands require those local artifacts; on a fresh clone,
 > regenerate and materialize them using the builders and commands below.
 
+Historical completed plans freeze Julia Manifest SHA-256
+`7e0472391bd0a41651e778eea7f7fb460f307ed61cfd7a678c3a9d550afb472a`.
+The current Manifest changes only the machine-local `CyclingSignatures.jl`
+path to `../../CyclingSignatures.jl`, so its hash is intentionally different.
+Validate historical local artifacts with their frozen Manifest revision; use
+the portable Manifest for new plans. The one-line migration is recorded in
+`../julia/manifest_path_migration.json`.
+
 This directory defines one analysis path for both the continuous Rössler
 system and the learned Compass-gait suspension.  The trajectory source and
 top-row projection differ by system; the bottom-row computation does not.

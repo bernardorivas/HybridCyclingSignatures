@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "migration": "cycling_signatures_dependency_path_only",
+  "historical_manifest_git_commit": "12132d7",
+  "historical_manifest_sha256": "7e0472391bd0a41651e778eea7f7fb460f307ed61cfd7a678c3a9d550afb472a",
+  "historical_path": "/Users/bdoprad/Work/Projects/hybrid-cycling-signatures/code/CyclingSignatures.jl",
+  "portable_manifest_git_commit": "ce88eec",
+  "portable_manifest_sha256": "c3bc45c04dbc054664d72d1308804942edc0e5f1e49e4566d00eb0c4f0f1f2c7",
+  "portable_path": "../../CyclingSignatures.jl",
+  "cycling_signatures_git_commit": "feda7731747f0d9120044fbf7d5f4b60bd2e0629",
+  "scientific_environment_change": false,
+  "historical_plan_policy": "Validate existing hash-bound artifacts with the historical manifest revision; materialize new plans with the portable manifest."
+}
