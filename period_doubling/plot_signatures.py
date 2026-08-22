@@ -18,8 +18,12 @@ Data layout: {data_root}/{system}/signatures/ with files like
   {prefix}_{regime}.npz (for dt extraction)
   subsegments_{prefix}_{regime}_metadata.txt (for stride)
 
-Segment lengths are in post-stride samples; convert to time spans via
-  tau = length * dt * stride
+Segment lengths are in post-stride samples; convert to the stored clock via
+  tau = (length - 1) * dt * stride
+
+For uniformly sampled raw trajectories this is physical time.  For latent
+suspension lifts it is a nominal suspension duration because every sampled
+bridge point also costs dt; it must not be labeled physical hybrid time.
 
 Usage:
   python plot_signatures.py
@@ -293,7 +297,7 @@ def fig_10_rank_stacked(regimes_data, time_spans_dict, out_path, system_config, 
                        color=color, width=width)
                 bottom += values
 
-        ax.set_xlabel("segment time span")
+        ax.set_xlabel(data_dict["time_axis_label"])
         ax.set_ylabel("#segments" if ax == axes[0] else "")
         ax.set_title(format_panel_title(regime, system_config, data_dict))
 
@@ -359,7 +363,7 @@ def fig_11_sig1_stacked(regimes_data, time_spans_dict, out_path, system_config, 
             ax.bar(time_spans, values, bottom=bottom, label=label, color=color, width=width)
             bottom += values
 
-        ax.set_xlabel("segment time span")
+        ax.set_xlabel(data_dict["time_axis_label"])
         ax.set_ylabel("#segments" if ax == axes[0] else "")
         ax.set_title(format_panel_title(regime, system_config, data_dict))
 
@@ -423,7 +427,7 @@ def fig_13_sig2_stacked(regimes_data, time_spans_dict, out_path, system_config, 
             ax.bar(time_spans, values, bottom=bottom, label=label, color=color, width=width)
             bottom += values
 
-        ax.set_xlabel("segment time span")
+        ax.set_xlabel(data_dict["time_axis_label"])
         ax.set_ylabel("#segments" if ax == axes[0] else "")
         ax.set_title(format_panel_title(regime, system_config, data_dict))
 
@@ -587,22 +591,27 @@ def fig_15_rank_heatmaps(regimes_data, time_spans_dict, out_path, system_config,
 
             radii, segment_lengths, counts = heatmap_data
 
-            # Convert x from post-stride sample counts to time spans using
-            # the same dt*stride factor as the other figures
+            # Convert x from post-stride sample counts to endpoint spans using
+            # the same (length - 1)*dt*stride rule as the other figures.
             spans = time_spans_dict.get(regime)
-            if spans is not None and len(spans) > 0:
-                factor = spans[-1] / segment_lengths[-1]
+            if spans is not None and len(spans) == len(segment_lengths):
+                heatmap_spans = np.asarray(spans, dtype=float)
             else:
-                factor = 1.0
+                clock_step = data_dict.get("clock_step_seconds", 1.0)
+                heatmap_spans = (
+                    np.maximum(np.asarray(segment_lengths) - 1, 0) * clock_step
+                )
 
             # Create heatmap (origin=lower means radii increase upward)
             im = ax.imshow(counts, aspect="auto", cmap="viridis", origin="lower",
-                          extent=[min(segment_lengths) * factor,
-                                 max(segment_lengths) * factor,
+                          extent=[float(heatmap_spans[0]),
+                                 float(heatmap_spans[-1]),
                                  min(radii), max(radii)],
                           vmin=vmin, vmax=vmax, interpolation="nearest")
 
-            ax.set_xlabel("segment time span" if i == n_regimes - 1 else "")
+            ax.set_xlabel(
+                data_dict["time_axis_label"] if i == n_regimes - 1 else ""
+            )
             ax.set_ylabel("filtration radius" if rank == 0 else "")
             title_base = format_panel_title(regime, system_config, data_dict)
             ax.set_title(f"{title_base} rank-{rank}", fontsize=10)
@@ -689,6 +698,7 @@ def load_all_data(data_root, system_config, eval_radius_suffix=""):
         dt = 0.02  # Default
         stride = 1  # Default
         param_value = None
+        meta = {}
         try:
             meta = load_json_from_npz(npz_path)
             dt = meta.get("dt", dt)
@@ -700,10 +710,16 @@ def load_all_data(data_root, system_config, eval_radius_suffix=""):
 
         # Store parameter value for use in title formatting
         data_dict["param_value"] = param_value
+        data_dict["time_axis_label"] = (
+            "nominal suspension duration (s)"
+            if meta.get("lift")
+            else "physical duration (s)"
+        )
+        data_dict["clock_step_seconds"] = dt * stride
 
         # Compute time spans from segment_length
         segment_lengths = np.array(rank_dict["segment_length"])
-        time_spans = segment_lengths * dt * stride
+        time_spans = np.maximum(segment_lengths - 1, 0) * dt * stride
         time_spans_dict[regime] = time_spans
 
         regimes_data.append(data_dict)
