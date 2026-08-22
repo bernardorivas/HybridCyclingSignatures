@@ -1,0 +1,3 @@
+[submodule "CyclingSignatures.jl"]
+	path = CyclingSignatures.jl
+	url = https://github.com/davidhien/CyclingSignatures.jl.git

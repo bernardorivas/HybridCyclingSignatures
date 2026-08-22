@@ -42,7 +42,7 @@ version = "4.2.0"
 
 [[deps.CyclingSignatures]]
 deps = ["DataInterpolations", "DataStructures", "Distances", "Graphs", "IterativeSolvers", "LaTeXStrings", "LinearAlgebra", "MetaGraphs", "ProgressBars", "Random", "SimpleWeightedGraphs", "SparseArrays", "StaticArrays", "StatsBase", "StepFunctions"]
-path = "/Users/bdoprad/Work/Projects/hybrid-cycling-signatures/code/CyclingSignatures.jl"
+path = "../../CyclingSignatures.jl"
 uuid = "b750c39d-317b-4ed7-a266-e63a9df6ec54"
 version = "0.2.1"
 
