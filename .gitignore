@@ -12,6 +12,7 @@ __pycache__/
 /figures/
 /runs/
 scripts/temp/
+experiments_planned/outputs/
 
 # Smoke-test runs (any *_smoke/ directory, anywhere in the tree)
 **/*_smoke/

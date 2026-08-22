@@ -1,7 +1,7 @@
 """
 Generic data construction for data-driven suspension representation.
 
-Stage 1 of the pipeline from seed_context.md:
+Pipeline stage:
   time series -> jump detection -> augmented suspension dataset
 
 System-specific simulation lives in subfolders (e.g. rimless wheel/).

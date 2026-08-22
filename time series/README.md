@@ -1,19 +1,29 @@
 # time series/
 
-Data-driven suspension construction from time series data (see `seed_context.md`).
+Support code for constructing suspension data and cycling-signature inputs from
+hybrid-system time series.
 
 ## Shared modules
 
 | File | Purpose |
 |------|---------|
-| `data_construction.py` | `build_augmented_dataset()` — system-agnostic: takes a base trajectory + jump pairs, produces the augmented suspension dataset (base points at s=0, bridge samples) |
-| `plot_suspension.py` | `plot_augmented_suspension()` — 3D sanity-check plot of base trajectory + bridges in (state, s) space |
+| `data_construction.py` | System-agnostic jump detection and augmented suspension construction from a base trajectory and jump pairs |
 
-## Examples
+## System simulators
 
 ### `rimless wheel/`
 
 | File | Purpose |
 |------|---------|
-| `simulate.py` | `simulate_rimless_wheel()` — runs the rimless wheel ODE with ground-truth impact detection, returns smooth segments + jump pairs. Also has `extract_jump_pairs()` to concatenate segments into a base trajectory. |
-| `example.py` | Minimal runnable demo: simulate 6 impacts, build augmented dataset, plot. Run with `python "time series/rimless wheel/example.py"` |
+| `simulate.py` | Runs the rimless-wheel ODE with impact detection and returns smooth segments plus jump pairs |
+
+### `compass gait/`
+
+| File | Purpose |
+|------|---------|
+| `simulate.py` | Runs the Compass-gait hybrid dynamics used by downstream exporters and period-doubling analyses |
+
+## Cycling signatures
+
+`cycling_signature/` contains the retained Python preparation/plotting tools
+and Julia environment used by the relaxed-space pipelines.
