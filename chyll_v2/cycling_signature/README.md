@@ -44,7 +44,7 @@ Additional flags set the cover scale and the number of samples; see the
 script for defaults.
 
 ```bash
-julia --project="time series/cycling_signature" \
+julia --project="period_doubling/julia" \
   chyll_v2/cycling_signature/julia/run_subsegments.jl \
   --data-dir chyll_v2/cycling_signature/data/rimless_wheel \
   --base continuous_lift_chyll_v2_phaseB
@@ -59,8 +59,12 @@ python chyll_v2/cycling_signature/plot/plot_signature_figures.py
 ## Results
 
 - **Rimless wheel** — the embedding recovers the expected single cycle.
-- **Compass-gait biped** — each gait of the period-doubling cascade is
-  recovered, and the chaotic gait is distinguished from the periodic ones.
+- **Compass-gait biped** — the canonical `phi007` run reaches rank 1 on long
+  enough segments, but its comparison-space Betti number is scale-sensitive.
+  The old `data/compass_gait_cascade_beta1/` files contain only one length-20,
+  rank-0 segment per slope and must not be cited as cascade evidence.  The
+  current matched-design cascade study, including raw and untrained-encoder
+  controls, lives under `../../period_doubling/`.
 - **Bouncing ball** — the ball's orbit spirals slowly toward rest rather than
   closing into a loop, so its cycling signature is only partially recovered.
 

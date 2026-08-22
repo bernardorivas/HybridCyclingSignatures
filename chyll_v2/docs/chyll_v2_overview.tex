@@ -53,7 +53,7 @@
   be fitted directly across it.
 \end{frame}
 
-\begin{frame}{Three Example Systems}
+\begin{frame}{Modeled Systems and Manuscript Studies}
   \begin{center}
   \begin{tabular}{lcl}
     \toprule
@@ -61,14 +61,15 @@
     \midrule
     Rimless wheel & 2 & stable rolling limit cycle \\
     Bouncing ball & 2 & bounces, losing energy at each impact \\
-    Compass-gait biped & 4 & period-doubling route to chaos \\
+    Compass-gait biped & 4 & stable orbit and slope bifurcation \\
     \bottomrule
   \end{tabular}
   \end{center}
 
   \vspace{1em}
-  They increase in difficulty. The compass-gait biped walks with period 1,
-  then 2, 4, 8, and finally chaotically as the ground slope steepens.
+  The stable canonical compass orbit is manuscript Example 2.  The separate
+  varying-slope compass analysis---period 1, then 2, 4, 8, and finally
+  chaos---is Example 3.
 \end{frame}
 
 \begin{frame}{The Idea}
@@ -277,9 +278,9 @@
 \end{frame}
 
 \begin{frame}{Training: Compass-Gait Biped}
-  The compass-gait biped trains in a single phase, one run per ground slope.
-  Shown is the period-2 gait at \(4.75^\circ\); the steeper cascade slopes
-  train the same way.
+  Example 2 uses the canonical stable-gait model.  Example 3 trains a separate
+  model at every sampled ground slope.  Shown is its period-2 gait at
+  \(4.75^\circ\); the steeper slopes train the same way.
 
   \begin{columns}[c]
     \begin{column}{0.60\textwidth}
@@ -303,10 +304,13 @@
   \begin{itemize}
     \item \textbf{Rimless wheel.} The model reproduces the rolling limit cycle,
       and the learned embedding recovers its expected single topological cycle.
-    \item \textbf{Compass-gait biped.} The cascade analysis recovers the
-      period-doubling sequence exactly: the learned latent states form 2, 4,
-      and 8 clusters at the period-2, -4, and -8 gaits, and disperse under
-      chaos.
+    \item \textbf{Compass gait, Example 2.} The canonical stable-gait lift
+      reaches cycling rank one on sufficiently long stored segments, with a
+      scale-sensitive comparison space.
+    \item \textbf{Compass gait, Example 3.} A DBSCAN return-map diagnostic
+      gives 2, 4, and 8 clusters at the sampled period-2, -4, and -8 gaits.
+      Raw return-map states give the same counts: this diagnoses temporal
+      recurrence on the section, not topology preservation.
     \item \textbf{Bouncing ball.} The orbit spirals slowly toward rest rather
       than closing into a loop, so its topological signature is only partially
       recovered.
@@ -324,7 +328,7 @@
     \code{figures/<name>/} & loss and rollout figures \\
     \code{cycling_signature/data/} & exported lifts and rank summaries \\
     \code{cycling_signature/figures/} & rank distribution and heatmap figures \\
-    \code{compass_analysis/} & compass cascade cluster analysis \\
+    \code{compass_analysis/} & compass return-map cluster diagnostic \\
     \bottomrule
   \end{tabular}
   \end{center}
@@ -445,8 +449,10 @@ print(np.linalg.norm(T, axis=1).max())
     \item CHyLL v2 learns an encoder, a latent vector field, and a decoder.
     \item \(L_g\), \(L_z\), and \(L_x\) are the commuting cells of the diagram.
     \item \(L_v\) and \(L_c\) add the seam-regularity conditions.
-    \item The learned embeddings recover the expected topology for the rimless
-      wheel and the compass-gait cascade.
+    \item The rimless-wheel cycling signature recovers its expected single
+      cycle; the stable canonical compass orbit is Example 2, while the
+      varying-slope compass study is Example 3.  Return-map cluster counts are
+      diagnostics, not topological evidence.
   \end{itemize}
 \end{frame}
 

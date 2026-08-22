@@ -14,7 +14,7 @@ This directory is self-contained. It shares no code with the `src/` directory
 (the main pipeline of this project), so the two approaches can be compared
 directly and `chyll_v2/` can be removed without affecting `src/`.
 
-## Example systems
+## Modeled systems
 
 Three hybrid systems are included, in increasing order of difficulty.
 
@@ -25,6 +25,11 @@ Three hybrid systems are included, in increasing order of difficulty.
 - **Compass-gait biped** — a two-legged walking model, four state variables.
   As the slope steepens it walks with period 1, then 2, 4, 8, and finally
   chaotically, a period-doubling route to chaos.
+
+The numbered manuscript studies are not in one-to-one correspondence with
+these system implementations.  The stable canonical compass gait is Example 2;
+the varying-slope compass-gait bifurcation analysis is Example 3.  The Rössler
+study under `../period_doubling/` is an auxiliary continuous-system comparison.
 
 ## Layout
 
@@ -62,8 +67,8 @@ The bouncing ball follows the same two steps with `train_bouncing_ball.py`:
 Phase A with `--w-v 0 --run-dir chyll_v2/runs/bouncing_ball_phaseA_wv0`, then
 Phase B fine-tuning from that model into `bouncing_ball_phaseB_finetune`.
 
-The compass-gait biped trains in a single phase, one command per slope. Each
-slope is one gait in the period-doubling cascade:
+The stored default-slope `compass_gait_phi007` model supports the stable gait in
+Example 2.  Example 3 uses a separate compass model for every sampled slope:
 
 ```bash
 python chyll_v2/scripts/train_compass.py --slope-config phi_1        # period 2
@@ -72,23 +77,32 @@ python chyll_v2/scripts/train_compass.py --slope-config phi_3        # period 8
 python chyll_v2/scripts/train_compass.py --slope-config phi_4_cloud  # chaotic
 ```
 
-Once the compass runs exist, this script clusters their learned latent states
-and reports how many distinct gaits each slope produces:
+Once the compass runs exist, this script applies DBSCAN to the post-impact
+return-map states after encoding:
 
 ```bash
 python chyll_v2/scripts/analyze_compass_cascade.py
 ```
 
+This is a return-map diagnostic, not a cycling-signature computation or other
+topological test.  The raw return-map states give the same 2, 4, and 8 cluster
+counts, and the script uses one fixed relative DBSCAN tolerance rather than a
+tolerance sweep.
+
 ## Results
 
 The trained models reproduce each system's motion, including the post-impact
-jumps, over long rollouts. For the compass-gait biped the cascade analysis
-recovers the period-doubling sequence exactly: the learned latent states
-separate into 2, 4, and 8 clusters at the period-2, -4, and -8 gaits, and
-disperse into many clusters under chaos.
+jumps, over long rollouts.  The canonical `phi007` cycling-signature result for
+Example 2 reaches rank one on sufficiently long stored segments, but its
+comparison space is scale-sensitive.  For Example 3, the DBSCAN return-map
+diagnostic separates the sampled periodic regimes into 2, 4, and 8 clusters
+and gives many clusters for the chaotic regime.  These counts diagnose temporal
+recurrence on the chosen section; they are not evidence that the learned
+embedding preserves topology.
 
-The topology of the learned embeddings is analyzed in `cycling_signature/`.
-See that folder's README.
+Topology is analyzed separately with cycling signatures.  See
+`cycling_signature/README.md`; the current matched-design cascade study and
+its raw and untrained controls live under `../period_doubling/`.
 
 ## Requirements
 
