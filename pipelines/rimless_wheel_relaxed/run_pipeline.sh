@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
 #
-# End-to-end reproduction of the rimless-wheel relaxed-space learned
-# cycling-signature result. Parallel to
+# NON-RUNNABLE PARTIAL ORCHESTRATOR for the rimless-wheel relaxed-space
+# cycling-signature result. It is retained as a stage inventory parallel to
 # pipelines/compass_gait_relaxed/run_pipeline.sh.
 #
-# Stages 2-5 are not yet ported; this orchestrator runs only stage 1
-# (training) today and prints a TODO list for the remaining stages.
+# Stages 1-4 have individual implementations, but stage 5 has not been
+# ported and the commands below have not been validated end to end. This
+# script exits before training or writing artifacts.
 #
 # Usage (from repo root):
 #     bash pipelines/rimless_wheel_relaxed/run_pipeline.sh
 #
 set -euo pipefail
+
+echo "NON-RUNNABLE: rimless pipeline is partial; run validated stages manually." >&2
+echo "Missing stage 5: rimless cycling-signature heatmap renderer." >&2
+exit 2
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
@@ -29,7 +34,7 @@ python "time series/cycling_signature/prepare_rimless_cs_inputs_relaxed.py"
 
 echo
 echo "=== [4/5] Cycling signature in Julia -- ready when stage 3 lands ==="
-echo "    julia --project=\"time series/cycling_signature\" \\"
+echo "    julia --project=\"period_doubling/julia\" \\"
 echo "          \"time series/cycling_signature/run_cycling_signature.jl\" \\"
 echo "          --base continuous_lift_relaxed_rimless"
 

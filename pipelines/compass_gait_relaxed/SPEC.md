@@ -1,4 +1,10 @@
-# Relaxed-Space Compass-Gait Cycling-Signature Pipeline — Specification
+# Relaxed-Space Compass-Gait Cycling-Signature Pipeline — NON-RUNNABLE/PARTIAL
+
+> **NON-RUNNABLE orchestrator.** Stages 1–4 have individual implementations,
+> but the stage-5 renderer requires the analytic baseline
+> `data/compass_gait/barcode_H1_analytic_tgt025.csv`. This pipeline neither
+> generates nor stores that input, so `run_pipeline.sh` exits before any
+> training or artifact writes.
 
 This file documents exactly what the pipeline does, in the order the bits run,
 with file-and-line citations into the canonical source. For the operational
@@ -13,7 +19,7 @@ Remark 4.6 of the manuscript):
 | Aspect               | Original CHyLL                        | This pipeline (relaxed)                          |
 |----------------------|---------------------------------------|--------------------------------------------------|
 | Target space         | hybrifold `M_H = X / ~`               | relaxed space `X' = X union (G x [0,1])`         |
-| Semiflow             | neural ODE, integrated                | discrete residual MLP, one tau per step          |
+| Semiflow             | neural ODE, integrated                | time-conditioned residual MLP, trained at fixed tau |
 | Training             | curriculum on prediction horizon      | no curriculum                                    |
 | Cylinder coordinate  | none                                  | `s` explicitly encoded as a state coordinate     |
 | Fibres over `G`      | collapsed by construction             | preserved; collision prevention is a training-time property |
@@ -65,7 +71,7 @@ layer of `MLP` is initialised with weights scaled by 0.01 and zero bias, so
 that at the start of training `E` approximates the identity on the first
 `n+1` output coordinates and near-zero noise on any padded dims. Nothing
 architecturally pins `E` at `s = 0`; base-space injectivity is a learned
-property, enforced during Phase II reconstruction training.
+property encouraged by Phase II reconstruction training.
 
 ### Flow predictor `F` (`FlowPredictor`, `src/networks.py`)
 
@@ -95,30 +101,31 @@ Two-phase procedure matching Algorithm 1 of the manuscript.
 
 ### Dataset
 
-`generate_suspension_dataset` (`src/system.py`) with `num_orbits = 3000`,
+`generate_suspension_dataset` (`src/system.py`) with `num_orbits = 3500`,
 `points_per_orbit = 20` steps of `tau = 0.05`. Half of the initial
 conditions start in the base space with `theta ~ U(-0.5, 0.5)^2`,
 `theta_dot ~ U(-2, 2)^2`; the other half start on the guard surface
 `theta_ns + theta_s = -2 phi` with random `s ~ U(0.01, 1)`. Total:
-~60 000 `(x_i, x_{i+1})` supervised pairs.
+~70 000 `(x_i, x_{i+1})` supervised pairs.
 
 ### Phase I (encoder + semiflow; 120 epochs)
 
 AdamW on E + F parameters, `lr = 8e-4`, `weight_decay = 1e-5`, cosine LR
-schedule, batch 1024, gradient clip 2.0. Five loss terms, no recon:
+schedule, batch 1024, gradient clip 2.0. Six evaluated terms, no recon:
 
 | Term    | Weight | Expression                                               |
 |---------|--------|----------------------------------------------------------|
 | `L_dyn` | 1.0    | `MSE(Ψ(τ, E(x_i)), E(x_{i+1}))`                          |
 | `L_glue`| 3.0    | `MSE(E(g, 1), E(r(g), 0))`, 256 sampled guard states     |
-| `L_conf`| 0.01   | `mean_i ||λ_i I - J_i^T J_i||_F^2` over ≤64 samples/batch |
+| `L_conf`| 0.0001 | `mean_i ||λ_i I - J_i^T J_i||_F^2` over ≤64 samples/batch |
 | `L_coll`| 1.0    | `sum_k ReLU(Λ - Var_batch(E(x)_k))`, `Λ = 0.1`            |
-| `L_utb` | 1.0    | `MSE(v_cyl(g, 0), v_X(g)) + MSE(v_cyl(g, 1), v_X(r(g)))` |
+| `L_seam`| 1.0    | cosine mismatch at the cylinder-entry and gluing-exit seams |
+| `L_utb` | 0.0    | legacy tangent anchor evaluated for diagnostics           |
 
 `v_cyl` is a finite-difference of `E` along the `s` direction with
 `h = 0.02`. `v_X` is padded with zeros in the `s`-slot to match `d`.
 
-### Phase II (decoder only; 40 epochs)
+### Phase II (decoder only; 150 epochs)
 
 Freeze E and F. AdamW on D alone, `lr = 2e-3`, cosine schedule. Single
 term:
@@ -179,16 +186,15 @@ Phase-A diagnostics written to
 
 ## 5. Julia cycling signature (`time series/cycling_signature/run_cycling_signature.jl`)
 
-### First-run setup (`run_cycling_signature.jl:22-29`)
+### Julia project (`run_cycling_signature.jl`)
 
 ```julia
-Pkg.add(url = "https://github.com/davidhien/StepFunctions.jl")
-Pkg.develop(path = "local_docs/CyclingSignatures.jl-main/CyclingSignatures.jl-main/")
-Pkg.instantiate()
+Pkg.activate(joinpath(REPO_ROOT, "period_doubling", "julia"))
 ```
 
-`StepFunctions.jl` is an unregistered dependency of `CyclingSignatures.jl` and
-must be added by URL first.
+The locked `period_doubling/julia/Manifest.toml` points at the repository-local
+`CyclingSignatures.jl/` checkout. The Windows-pathed Manifest under
+`time series/cycling_signature/` is not used.
 
 ### Tangent renormalisation
 
@@ -211,6 +217,12 @@ used for the full birth vector in the body.
 
 ## 6. Figure (`time series/cycling_signature/plot_compass_rank_heatmap.py`)
 
+The renderer is not self-contained in the current checkout: it loads the two
+learned sweep CSVs and `barcode_H1_analytic_tgt025.csv` unconditionally. The
+last file is not produced by stages 1–4 and is absent from the repository.
+Until a validated analytic-baseline stage is supplied, this section documents
+the intended output only and the orchestrator remains disabled.
+
 Two outputs:
 
 - `figures/compass_gait/fig_compass_cycling_rank_heatmap.pdf/.png` — 2 panels:
@@ -231,9 +243,8 @@ Discrete colormap:
 
 ## What this pipeline is not doing
 
-- No BridgeNet. `time series/bridge_net.py` is the bounded-`u` analytic bridge
-  used elsewhere; it is **not** imported by
-  `prepare_compass_cs_inputs_relaxed.py` and has no role in the relaxed-space pipeline.
+- No learned bridge network. The relaxed-space pipeline builds and embeds its
+  bridge samples directly in `prepare_compass_cs_inputs_relaxed.py`.
 - No per-bridge network; the same `E_theta` handles arcs and bridges,
   selected only by the value of `s`.
 - No post-hoc bridge smoothing, arc-endpoint fitting, or tangent alignment

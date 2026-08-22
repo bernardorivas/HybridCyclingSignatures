@@ -1,5 +1,10 @@
 """
-Manuscript figure: compass cycling-signature rank heatmaps.
+NON-RUNNABLE with the current repository artifacts.
+
+Manuscript figure: compass cycling-signature rank heatmaps. The renderer
+unconditionally requires all three inputs listed below, including the analytic
+baseline that the compass pipeline does not generate and the repository does
+not store. See pipelines/compass_gait_relaxed/README.md.
 
 Small-multiple heatmaps of the cycling-signature rank over the discrete
 cover-parameter grid (cubical cover scale, sphere-bundle cover radius).

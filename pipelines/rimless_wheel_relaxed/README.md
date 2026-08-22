@@ -1,4 +1,8 @@
-# Rimless-Wheel Relaxed-Space Cycling-Signature Pipeline
+# Rimless-Wheel Relaxed-Space Cycling-Signature Pipeline — NON-RUNNABLE/PARTIAL
+
+> **NON-RUNNABLE orchestrator.** `run_pipeline.sh` exits before executing any
+> stage. Stages 1–4 can be invoked individually, but stage 5 and an end-to-end
+> validation are still missing.
 
 Parallel of `pipelines/compass_gait_relaxed/`, applied to the rimless-wheel
 hybrid system. The end goal is the same: train the generic Section-4 encoder
@@ -32,9 +36,9 @@ Produces `runs/rimless_wheel/model.pt` after Phase I (E + F) and Phase II
 (D alone) and writes
 `figures/rimless_wheel/fig_rimless_optimization_losses.png`.
 
-The full orchestrator
-[`run_pipeline.sh`](run_pipeline.sh) currently runs only step 1. It will
-gain steps 2–5 as those scripts get ported.
+The partial [`run_pipeline.sh`](run_pipeline.sh) is deliberately disabled and
+does not train or write artifacts. Invoke the live stages individually while
+the heatmap renderer and end-to-end validation remain outstanding.
 
 ## What this pipeline produces (eventually)
 
@@ -43,7 +47,7 @@ Main manuscript figure (parallel to compass):
 - `figures/rimless_wheel/fig_rimless_cycling_rank_heatmap.{pdf,png}` —
   panels for representative impact counts.
 
-Supporting artifacts (after stages 2–5 are ported):
+Supporting artifacts from the individual live stages:
 
 - `runs/rimless_wheel/model.pt`
 - `data/rimless_wheel/continuous_lift_relaxed{,_n*}.{npy,csv}`
@@ -60,9 +64,12 @@ Supporting artifacts (after stages 2–5 are ported):
 | Loss                            | `src/losses.py` (handles rimless via `_sample_guard_states`)               |
 | Training script                 | `scripts/train_rimless.py`                                                 |
 | Canonical rollout simulator     | `time series/rimless wheel/simulate.py` (TODO: confirm interface matches `simulate_compass_gait`) |
-| Lift export                     | TODO — `time series/cycling_signature/prepare_rimless_cs_inputs_relaxed.py` |
+| Lift export                     | `time series/cycling_signature/prepare_rimless_cs_inputs_relaxed.py`        |
 | Julia cycling signature         | `time series/cycling_signature/run_cycling_signature.jl` (system-agnostic) |
 | Heatmap figure                  | TODO — `time series/cycling_signature/plot_rimless_rank_heatmap.py`        |
+
+The Julia runner uses the locked `period_doubling/julia/` project; it does
+not resolve the Windows-pathed Manifest under `time series/cycling_signature/`.
 
 ## Notes
 

@@ -1,26 +1,37 @@
 #!/usr/bin/env bash
 #
-# End-to-end reproduction of the compass-gait relaxed-space learned
-# cycling-signature result.
+# NON-RUNNABLE PARTIAL ORCHESTRATOR for the compass-gait relaxed-space
+# learned cycling-signature result.
 #
-# The "relaxed-space" encoder E_theta is the CHyLL-adjacent extrusion
-# architecture E(x, s) = (x, 0) + s * MLP(x, s) described in SPEC.md; it
-# embeds the relaxed space X' = X union (G x [0,1]), not the hybrifold.
+# The "relaxed-space" encoder E_theta is the generic residual architecture
+# E(x) = pad(x, d) + MLP(x) described in SPEC.md. It embeds the relaxed space
+# X' = X union (G x [0,1]), not the hybrifold.
 #
-# Runs four stages, each idempotent:
+# The individual implementations for stages 1-4 are present. Stage 5 also
+# requires data/compass_gait/barcode_H1_analytic_tgt025.csv, but no stage in
+# this pipeline creates that analytic baseline and the file is not stored in
+# the repository. This script therefore exits before training or writing
+# artifacts. The commands below are retained as a stage inventory.
+#
+# Intended stages:
 #   1. Train the SuspensionNetworks on the compass-gait relaxed semiflow.
-#   2. Export two encoded lifts (5-impact and 20-impact rollouts) + diagnostics.
-#   3. Compute David Hien's cycling signature in Julia for each lift.
-#   4. Render the manuscript heatmap figure + appendix variant.
+#   2. Evaluate a decoded held-out rollout.
+#   3. Export two encoded lifts (5-impact and 20-impact rollouts) + diagnostics.
+#   4. Compute David Hien's cycling signature in Julia for each lift.
+#   5. Render the manuscript heatmap figure + appendix variant.
 #
 # Usage (from repo root):
 #     bash pipelines/compass_gait_relaxed/run_pipeline.sh
 #
 # The Python environment must have torch / scipy / numpy / matplotlib.
-# Julia must be on PATH; the first run installs StepFunctions.jl and develops
-# CyclingSignatures.jl into time series/cycling_signature/.
+# Julia must be on PATH. The locked project is period_doubling/julia/;
+# do not use the Windows-pathed time series/cycling_signature/Manifest.toml.
 #
 set -euo pipefail
+
+echo "NON-RUNNABLE: compass pipeline is partial; run validated stages manually." >&2
+echo "Missing analytic input: data/compass_gait/barcode_H1_analytic_tgt025.csv (required by stage 5)." >&2
+exit 2
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
@@ -40,10 +51,10 @@ python "time series/cycling_signature/prepare_compass_cs_inputs_relaxed.py" \
 
 echo
 echo "=== [4/5] Cycling signature in Julia (may take a while on first run) ==="
-julia --project="time series/cycling_signature" \
+julia --project="period_doubling/julia" \
       "time series/cycling_signature/run_cycling_signature.jl" \
       --base continuous_lift_relaxed
-julia --project="time series/cycling_signature" \
+julia --project="period_doubling/julia" \
       "time series/cycling_signature/run_cycling_signature.jl" \
       --base continuous_lift_relaxed_n20
 

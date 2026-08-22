@@ -139,6 +139,8 @@ compass case where bridges are distinct in time-of-flight phase.
 `time series/cycling_signature/run_cycling_signature.jl` is system-agnostic
 once the lift CSVs exist. Same `(boxsize, sb_radius) ∈ {0.30, 0.20, 0.10,
 0.05} × {1, 2, 4}` sweep as compass.
+It activates the locked `period_doubling/julia/` project rather than the
+Windows-pathed Manifest beside the runner.
 
 ## 6. Heatmap figure — **TODO**
 
