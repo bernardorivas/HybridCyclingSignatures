@@ -1,7 +1,19 @@
+"""NON-RUNNABLE legacy entry point.
+
+This script predates the Section-4 two-phase loss API and also imports stale
+visualization names.  Use ``scripts/train_rimless.py``.  It is retained only
+to make the historical split explicit.
+"""
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 ROOT = Path(__file__).parent.parent
+
+if __name__ == "__main__":
+    raise SystemExit(
+        "NON-RUNNABLE: scripts/train.py is a legacy entry point; "
+        "use scripts/train_rimless.py"
+    )
 
 import torch
 import torch.optim as optim

@@ -77,7 +77,10 @@ def train():
     )
     sched1 = optim.lr_scheduler.CosineAnnealingLR(opt_p1, T_max=config.phase1_epochs)
 
-    p1_hist = {k: [] for k in ('dyn', 'glue', 'conf', 'coll', 'utb', 'total')}
+    p1_keys = ['dyn', 'glue', 'conf', 'coll', 'utb', 'total']
+    if config.weight_seam > 0:
+        p1_keys.insert(-1, 'seam')
+    p1_hist = {k: [] for k in p1_keys}
 
     for epoch in range(config.phase1_epochs):
         model.train()
@@ -99,9 +102,11 @@ def train():
             p1_hist[k].append(float(np.mean(epoch_metrics[k])))
         if (epoch + 1) == 1 or (epoch + 1) % 10 == 0:
             h = {k: p1_hist[k][-1] for k in p1_hist}
+            seam = f"  seam={h['seam']:.4f}" if 'seam' in h else ""
             print(f"  [P1] Epoch {epoch+1:3d}/{config.phase1_epochs}  "
                   f"total={h['total']:.4f}  dyn={h['dyn']:.4f}  glue={h['glue']:.4f}  "
-                  f"conf={h['conf']:.2e}  coll={h['coll']:.4f}  utb={h['utb']:.4f}",
+                  f"conf={h['conf']:.2e}  coll={h['coll']:.4f}  utb={h['utb']:.4f}"
+                  f"{seam}",
                   flush=True)
 
     for p in model.E.parameters(): p.requires_grad = False
@@ -155,6 +160,9 @@ def train():
     ax1.semilogy(ep1, p1_hist['conf'],  color=OKABE_ITO[2], lw=1.2, label=r'$\mathcal{L}_{\mathrm{conf}}$')
     ax1.semilogy(ep1, p1_hist['coll'],  color=OKABE_ITO[3], lw=1.2, label=r'$\mathcal{L}_{\mathrm{coll}}$')
     ax1.semilogy(ep1, p1_hist['utb'],   color=OKABE_ITO[4], lw=1.2, label=r'$\mathcal{L}_{\mathrm{utb}}$')
+    if 'seam' in p1_hist:
+        ax1.semilogy(ep1, p1_hist['seam'], color=OKABE_ITO[6], lw=1.2,
+                     label=r'$\mathcal{L}_{\mathrm{seam}}$')
     ax1.set_xlabel('Epoch'); ax1.set_ylabel('Loss (MSE)')
     ax1.set_title(f'Phase I: encoder + semiflow ({EXP_TAG})')
     ax1.legend(fontsize=8, ncol=2)

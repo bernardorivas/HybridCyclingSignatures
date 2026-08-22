@@ -3,8 +3,8 @@ Rimless-wheel training, faithful to Section 4 / Algorithm 1 of the manuscript.
 
 Mirrors scripts/train_compass.py but targets the 2-D rimless system.
 
-Phase I   — train E and F jointly on five terms (dyn, glue, conf, coll, utb),
-            no reconstruction.
+Phase I   — train E and F jointly on dyn, glue, conf, coll, and seam losses,
+            with the legacy UTB anchor available as an option; no reconstruction.
 Phase II  — freeze E and F, train D alone on masked L_recon with larger LR.
 
 Saves model weights to runs/rimless_wheel/model.pt and per-term loss history

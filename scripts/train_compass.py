@@ -1,14 +1,25 @@
+"""
+Compass-gait training, faithful to Section 4 / Algorithm 1 of the manuscript.
+
+Phase I   — train E and F jointly on dyn, glue, conf, coll, and seam losses,
+           with the legacy UTB anchor available as an option; no reconstruction.
+Phase II  — freeze E and F, train D alone on masked L_recon with larger LR.
+
+Saves model weights to runs/compass_gait/model.pt and per-term loss history
+plot to figures/compass_gait/fig_compass_optimization_losses.png.
+"""
+import argparse
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 ROOT = Path(__file__).parent.parent
 
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 
 from config import config, SystemType
 from system import CompassGaitHybridSystem, generate_suspension_dataset
@@ -16,111 +27,194 @@ from networks import SuspensionNetworks
 from losses import calculate_composite_losses
 from visualize import OKABE_ITO, PUB_STYLE, FIGURES_DIR
 
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
+
 config.system_type = SystemType.COMPASS_GAIT
-config.epochs = 100
-config.num_train_samples = 3000
-config.embed_extra = 0          # 0 -> 5D, 1 -> 6D, 2 -> 7D, etc.
+config.embed_extra = 0
+# Tuning pass focused on D(E(x)) round-trip quality. Keeps full Section-4
+# architecture + 6-term loss + 2-phase schedule; only knobs changed:
+#   - num_train_samples bumped 2500 -> 3500
+#   - phase2_epochs     bumped 50   -> 150
+#   - weight_conf       cut    1e-3 -> 1e-4 (stop fighting invertibility)
+config.num_train_samples = 3500
+config.points_per_orbit = 20
+config.phase1_epochs = 120
+config.phase2_epochs = 150
+config.weight_conf = 0.0001
 
 
-def train_compass_gait():
-    matplotlib.rcParams.update(PUB_STYLE)
-    print(f"Compass-Gait Hybrid Suspension")
-    print(f"  state_dim={config.state_dim}, embed_dim={config.embed_dim} "
-          f"(extra={config.embed_extra})")
-    print(f"  phi={np.degrees(config.phi):.1f} deg, mu={config.mu}, beta={config.beta}")
-
+def _resolve_device():
     if config.device == "mps" and torch.backends.mps.is_available():
-        device = torch.device("mps")
-    elif config.device == "cuda" and torch.cuda.is_available():
-        device = torch.device("cuda")
-    else:
-        device = torch.device("cpu")
+        return torch.device("mps")
+    if config.device == "cuda" and torch.cuda.is_available():
+        return torch.device("cuda")
+    return torch.device("cpu")
+
+
+def _parse_args():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--weight-conf", type=float, default=config.weight_conf)
+    p.add_argument("--weight-utb",  type=float, default=config.weight_utb)
+    p.add_argument("--weight-seam", type=float, default=config.weight_seam)
+    p.add_argument("--embed-extra", type=int,   default=config.embed_extra)
+    p.add_argument("--out-suffix", default="")
+    return p.parse_args()
+
+
+def train_compass_gait(out_suffix=""):
+    matplotlib.rcParams.update(PUB_STYLE)
+    print("Compass-gait relaxed-space training (Section 4 pipeline)")
+    print(f"  state_dim={config.state_dim}, embed_dim={config.embed_dim}")
+    print(f"  phi={np.degrees(config.phi):.1f} deg, mu={config.mu}, beta={config.beta}")
+    print(f"  weight_conf={config.weight_conf}, weight_utb={config.weight_utb}, "
+          f"weight_seam={config.weight_seam}, out_suffix={out_suffix!r}")
+
+    device = _resolve_device()
     print(f"  device={device}\n")
 
-    # 1. Generate Dataset
-    print("Generating dataset...")
+    # 1. Dataset
+    print(f"Generating dataset ({config.num_train_samples} orbits x "
+          f"{config.points_per_orbit} steps)...", flush=True)
+    import time
+    t0 = time.time()
     hds = CompassGaitHybridSystem(config)
     X_train, Y_train = generate_suspension_dataset(
         hds, config.integration_tau, config.num_train_samples,
         points_per_orbit=config.points_per_orbit, cfg=config)
-    print(f"  {X_train.shape[0]} training pairs")
+    print(f"  generated {X_train.shape[0]} pairs in {time.time() - t0:.1f}s",
+          flush=True)
     dataset = TensorDataset(X_train, Y_train)
     dataloader = DataLoader(dataset, batch_size=config.batch_size, shuffle=True)
 
-    # 2. Networks
+    # 2. Model
     model = SuspensionNetworks(config).to(device)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"  model: {n_params:,} parameters\n")
-    optimizer = optim.AdamW(model.parameters(), lr=config.lr,
-                            weight_decay=config.weight_decay)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.epochs)
 
-    # 3. Training Loop
-    history = {'comm': [], 'glue': [], 'recon': [], 'total': []}
+    # ----- Phase I -----
+    print(f"Phase I: E + F on (dyn, glue, conf, coll, utb), "
+          f"{config.phase1_epochs} epochs, lr={config.phase1_lr}")
+    opt_phase1 = optim.AdamW(
+        list(model.E.parameters()) + list(model.F.parameters()),
+        lr=config.phase1_lr, weight_decay=config.weight_decay,
+    )
+    sched1 = optim.lr_scheduler.CosineAnnealingLR(opt_phase1, T_max=config.phase1_epochs)
 
-    for epoch in range(config.epochs):
+    phase1_keys = ['dyn', 'glue', 'conf', 'coll', 'utb', 'total']
+    if config.weight_seam > 0:
+        phase1_keys.insert(-1, 'seam')
+    phase1_history = {k: [] for k in phase1_keys}
+
+    for epoch in range(config.phase1_epochs):
         model.train()
-        epoch_metrics = {k: [] for k in history}
+        epoch_metrics = {k: [] for k in phase1_history}
 
         for x_i, x_next in dataloader:
-            x_i, x_next = x_i.to(device), x_next.to(device)
-            optimizer.zero_grad()
-
+            x_i = x_i.to(device); x_next = x_next.to(device)
+            opt_phase1.zero_grad()
             total_loss, metrics = calculate_composite_losses(
-                model, hds, x_i, x_next, config)
+                model, hds, x_i, x_next, config, phase=1)
             total_loss.backward()
-
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=2.0)
-            optimizer.step()
-
+            torch.nn.utils.clip_grad_norm_(
+                list(model.E.parameters()) + list(model.F.parameters()),
+                max_norm=2.0)
+            opt_phase1.step()
             for k, v in metrics.items():
                 epoch_metrics[k].append(v)
 
-        scheduler.step()
-
-        for k in history:
-            history[k].append(np.mean(epoch_metrics[k]))
+        sched1.step()
+        for k in phase1_history:
+            phase1_history[k].append(float(np.mean(epoch_metrics[k])))
 
         if (epoch + 1) == 1 or (epoch + 1) % 10 == 0:
-            h = {k: history[k][-1] for k in history}
-            print(f"Epoch {epoch+1:3d}/{config.epochs} | "
-                  f"total={h['total']:.4f}  comm={h['comm']:.4f}  "
-                  f"glue={h['glue']:.4f}  recon={h['recon']:.4f}")
+            h = {k: phase1_history[k][-1] for k in phase1_history}
+            extra = f"  seam={h['seam']:.4f}" if 'seam' in h else ""
+            print(f"  [P1] Epoch {epoch+1:3d}/{config.phase1_epochs}  "
+                  f"total={h['total']:.4f}  dyn={h['dyn']:.4f}  glue={h['glue']:.4f}  "
+                  f"conf={h['conf']:.2e}  coll={h['coll']:.4f}  utb={h['utb']:.4f}"
+                  f"{extra}")
 
-    # 4. Save model
+    # Freeze E and F
+    for p in model.E.parameters(): p.requires_grad = False
+    for p in model.F.parameters(): p.requires_grad = False
+
+    # ----- Phase II -----
+    print(f"\nPhase II: D alone on masked L_recon, "
+          f"{config.phase2_epochs} epochs, lr={config.phase2_lr}")
+    opt_phase2 = optim.AdamW(
+        model.D.parameters(),
+        lr=config.phase2_lr, weight_decay=config.weight_decay,
+    )
+    sched2 = optim.lr_scheduler.CosineAnnealingLR(opt_phase2, T_max=config.phase2_epochs)
+
+    phase2_history = {'recon': [], 'total': []}
+
+    for epoch in range(config.phase2_epochs):
+        model.train()
+        epoch_metrics = {k: [] for k in phase2_history}
+
+        for x_i, _ in dataloader:
+            x_i = x_i.to(device)
+            opt_phase2.zero_grad()
+            total_loss, metrics = calculate_composite_losses(
+                model, hds, x_i, x_i, config, phase=2)
+            total_loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.D.parameters(), max_norm=2.0)
+            opt_phase2.step()
+            for k, v in metrics.items():
+                epoch_metrics[k].append(v)
+
+        sched2.step()
+        for k in phase2_history:
+            phase2_history[k].append(float(np.mean(epoch_metrics[k])))
+
+        if (epoch + 1) == 1 or (epoch + 1) % 5 == 0:
+            print(f"  [P2] Epoch {epoch+1:3d}/{config.phase2_epochs}  "
+                  f"recon={phase2_history['recon'][-1]:.4f}")
+
+    # 3. Save model
     out_dir = ROOT / "runs" / "compass_gait"
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / "model.pt"
+    out_path = out_dir / f"model{out_suffix}.pt"
     torch.save(model.state_dict(), out_path)
     print(f"\nModel saved to {out_path}")
 
-    # 5. Figures
+    # 4. Loss figure
     fig_dir = FIGURES_DIR / "compass_gait"
     fig_dir.mkdir(parents=True, exist_ok=True)
 
-    # Fig B: Optimization losses
-    fig, ax = plt.subplots(figsize=(5, 3.5))
-    epochs_arr = np.arange(1, config.epochs + 1)
-    ax.semilogy(epochs_arr, history['total'], color=OKABE_ITO[7],
-                linewidth=1.8, label='Total')
-    ax.semilogy(epochs_arr, history['comm'], color=OKABE_ITO[0],
-                linewidth=1.2, label='Commutativity')
-    ax.semilogy(epochs_arr, history['glue'], color=OKABE_ITO[1],
-                linewidth=1.2, label='Gluing')
-    ax.semilogy(epochs_arr, history['recon'], color=OKABE_ITO[2],
-                linewidth=1.2, label='Reconstruction')
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('Loss (MSE)')
-    ax.set_title('Optimization Convergence')
-    ax.legend(fontsize=8)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 3.6))
+    ep1 = np.arange(1, config.phase1_epochs + 1)
+    ax1.semilogy(ep1, phase1_history['total'], color=OKABE_ITO[7], lw=1.8, label='total')
+    ax1.semilogy(ep1, phase1_history['dyn'],   color=OKABE_ITO[0], lw=1.2, label=r'$\mathcal{L}_{\mathrm{dyn}}$')
+    ax1.semilogy(ep1, phase1_history['glue'],  color=OKABE_ITO[1], lw=1.2, label=r'$\mathcal{L}_{\mathrm{glue}}$')
+    ax1.semilogy(ep1, phase1_history['conf'],  color=OKABE_ITO[2], lw=1.2, label=r'$\mathcal{L}_{\mathrm{conf}}$')
+    ax1.semilogy(ep1, phase1_history['coll'],  color=OKABE_ITO[3], lw=1.2, label=r'$\mathcal{L}_{\mathrm{coll}}$')
+    ax1.semilogy(ep1, phase1_history['utb'],   color=OKABE_ITO[4], lw=1.2, label=r'$\mathcal{L}_{\mathrm{utb}}$')
+    if 'seam' in phase1_history:
+        ax1.semilogy(ep1, phase1_history['seam'], color=OKABE_ITO[6], lw=1.2,
+                     label=r'$\mathcal{L}_{\mathrm{seam}}$')
+    ax1.set_xlabel('Epoch'); ax1.set_ylabel('Loss (MSE)')
+    ax1.set_title('Phase I: encoder + semiflow')
+    ax1.legend(fontsize=8, ncol=2)
+
+    ep2 = np.arange(1, config.phase2_epochs + 1)
+    ax2.semilogy(ep2, phase2_history['recon'], color=OKABE_ITO[5], lw=1.8,
+                 label=r'$\mathcal{L}_{\mathrm{recon}}$ (masked)')
+    ax2.set_xlabel('Epoch'); ax2.set_ylabel('Loss (MSE)')
+    ax2.set_title('Phase II: decoder')
+    ax2.legend(fontsize=8)
+
     fig.tight_layout()
-    fig.savefig(fig_dir / "fig_compass_optimization_losses.png", dpi=200)
+    fig_path = fig_dir / f"fig_compass_optimization_losses{out_suffix}.png"
+    fig.savefig(fig_path, dpi=200)
     plt.close(fig)
-    print(f"Loss figure saved to {fig_dir / 'fig_compass_optimization_losses.png'}")
+    print(f"Loss figure saved to {fig_path}")
 
 
 if __name__ == '__main__':
-    train_compass_gait()
+    args = _parse_args()
+    config.weight_conf = args.weight_conf
+    config.weight_utb = args.weight_utb
+    config.weight_seam = args.weight_seam
+    config.embed_extra = args.embed_extra
+    train_compass_gait(out_suffix=args.out_suffix)

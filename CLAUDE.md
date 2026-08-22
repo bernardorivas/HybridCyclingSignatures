@@ -4,15 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Computational topology / machine learning research project implementing "Hybrid Suspension" -- learning continuous manifold embeddings of discontinuous hybrid dynamical systems. Two example systems: the **Rimless Wheel** (stable) and the **Compass-Gait Biped** (in progress). Companion code for the `suspension.tex` manuscript.
+Computational topology / machine learning research project implementing "Hybrid Suspension" -- learning continuous manifold embeddings of discontinuous hybrid dynamical systems. The code models the **Rimless Wheel**, **Bouncing Ball**, and **Compass-Gait Biped**. In the manuscript, the stable canonical compass orbit is Example 2 and the varying-slope compass bifurcation analysis is Example 3. Companion code for the `suspension.tex` manuscript.
 
 ## Running the Project
 
 ```bash
 source venv/bin/activate
 
-# Rimless Wheel training (primary, stable)
-python scripts/train.py
+# Rimless Wheel training (primary Section-4 pipeline)
+python scripts/train_rimless.py
 
 # Compass-Gait training (experimental)
 python scripts/train_compass.py
@@ -42,10 +42,11 @@ src/                  # Core library (on sys.path via scripts)
   config.py           # HybridSuspensionConfig dataclass + SystemType enum
   system.py           # BaseHybridSystem, RimlessWheelHybridSystem, CompassGaitHybridSystem
   networks.py         # E (encoder), F (flow predictor), D (decoder), SuspensionNetworks
-  losses.py           # Composite loss: commutativity + gluing + reconstruction
+  losses.py           # Two-phase Section-4 losses, including seam compatibility
   visualize.py        # Publication-quality plotting (Okabe-Ito palette, PUB_STYLE)
 scripts/              # Entry points -- all prepend src/ to sys.path
-  train.py            # Rimless Wheel training loop
+  train.py            # Disabled legacy entry point; use train_rimless.py
+  train_rimless.py    # Rimless Wheel two-phase training loop
   train_compass.py    # Compass-Gait training loop
   replot.py           # Reload saved model, regenerate figures
   true_suspension.py  # Analytic (no NN) suspension embedding
@@ -63,21 +64,26 @@ references/           # Reference papers (Goswami compass gait, etc.)
 
 ## Architecture
 
-Three cooperating networks learn the embedding `(state space) -> (continuous manifold) -> (state space)`:
+Three cooperating networks learn the embedding `(suspension state) -> (continuous manifold) -> (suspension state)`:
 
-- **E (ExtrusionEncoder)**: `[state, s] -> R^{d+1}`. Identity at `s=0` (base space); learned deformation scaled by `s` on the mapping cylinder (`s > 0`).
-- **F (FlowPredictor)**: `R^{d+1} -> R^{d+1}`. Residual network learning the time-tau discrete semiflow in embedded space.
-- **D (StabilizationDecoder)**: `R^{d+1} -> state`. Inverts E via small residual correction; forces `s=0` in output.
+- **E (Encoder)**: `R^{n+1} -> R^d`. A generic residual MLP initialized near the identity-padded input; it is not pinned at `s=0`.
+- **F (FlowPredictor)**: `R_+ x R^d -> R^d`. A time-conditioned residual MLP learning the discrete semiflow.
+- **D (Decoder)**: `R^d -> R^{n+1}`. A generic residual decoder that reconstructs the cylinder coordinate as well as the physical state.
 
-All three are MLPs built by `_build_mlp()` with GELU activations. Dimensions adapt to `config.state_dim` (2 for rimless wheel, 4 for compass gait) via the `+1` for the cylinder parameter `s`. When `embed_extra > 0`, embedding dimension is `state_dim + 1 + embed_extra`.
+All three use GELU MLPs. Dimensions adapt to `config.state_dim` (2 for rimless wheel, 4 for compass gait), with `embed_dim = state_dim + 1 + embed_extra`. Archived checkpoints are loaded through explicit legacy network classes selected from their state-dict shapes.
 
 ### Loss Function (losses.py)
 
-| Loss | Weight | Purpose |
-|------|--------|---------|
-| Commutativity | 1.0 | `F(E(x_i)) = E(x_{i+1})` -- dynamics commute with embedding |
-| Gluing | 3.0 | `E(guard, 1) = E(reset, 0)` -- enforces quotient topology |
-| Reconstruction | 0.1 | `D(E(x)) = x` -- prevents manifold collapse |
+| Loss | Default weight | Purpose |
+|------|----------------|---------|
+| Dynamics | 1.0 | `F(dt, E(x_i)) = E(x_{i+1})` |
+| Gluing | 3.0 | `E(guard, 1) = E(reset, 0)` |
+| Seam | 1.0 | Align arc and bridge tangents at both seams |
+| Conformal | 0.01 | Control local metric distortion of `E` |
+| Anti-collapse | 1.0 | Maintain latent-coordinate variance |
+| Reconstruction | 1.0 | `D(E(x)) = x` away from quotient-boundary ambiguity |
+
+The legacy one-sided UTB anchor remains available with default weight zero. Phase I trains `E` and `F` without reconstruction; Phase II freezes them and trains `D` on masked reconstruction.
 
 ### Hybrid Systems (system.py)
 
@@ -100,11 +106,11 @@ Subclasses define:
 
 ### Training Pipeline
 
-Both `train.py` and `train_compass.py` follow: generate dataset -> DataLoader -> AdamW + CosineAnnealingLR -> training loop with `calculate_composite_losses` -> validation -> plot -> save to `runs/{system}/model.pt`. Gradient clipping at `max_norm=2.0`.
+`train_rimless.py` and `train_compass.py` generate data, train `E` and `F` with the Phase-I objective, freeze them, train `D` with masked reconstruction, validate, plot, and save to `runs/{system}/model.pt`. They use AdamW, cosine scheduling, and gradient clipping at `max_norm=2.0`.
 
 ## Key Design Decisions
 
-- **Singleton config**: `config = HybridSuspensionConfig()` in `config.py` is mutated directly by scripts. `train_compass.py` sets `config.system_type = SystemType.COMPASS_GAIT` before importing system/network classes. No CLI argument parsing.
+- **Singleton config**: `config = HybridSuspensionConfig()` in `config.py` is mutated directly by scripts. Training scripts expose selected overrides through CLI flags and write them back to this singleton before execution.
 - **sys.path injection**: Scripts prepend `src/` to `sys.path` at the top; imports within `src/` use bare module names (`from config import config`).
 - **Visualization**: Okabe-Ito colorblind-safe palette and shared `PUB_STYLE` dict. Functions are system-specific: `plot_hybrid_suspension_rimless`, `plot_hybrid_suspension_compass`, `compute_deep_crossing_validation_rimless`.
 - **Output paths**: Model weights to `runs/{system}/model.pt`; figures to `figures/{system}/`; data to `data/{system}/`.
@@ -112,7 +118,7 @@ Both `train.py` and `train_compass.py` follow: generate dataset -> DataLoader ->
 
 ## Known Issues
 
-- `train.py` imports `compute_deep_crossing_validation` and `plot_hybrid_suspension` but `visualize.py` exports `compute_deep_crossing_validation_rimless` and `plot_hybrid_suspension_rimless` (suffixed names). This is a stale import that will cause ImportError.
+- `scripts/train.py` is retained as an explicitly non-runnable historical entry point. Use `scripts/train_rimless.py`.
 
 ## Mathematical Correspondence
 
@@ -123,8 +129,8 @@ The code realizes the hybrid suspension semiflow from `suspension.tex`:
 | H = (X, phi, G, r) | `BaseHybridSystem` subclasses |
 | X' = X ∪ (G x [0,1]) (mapping cylinder) | `s` parameter in state vector |
 | ~ (quotient: (g,1) ~ r(g)) | Gluing loss |
-| embed: Sigma_H(X) -> R^{d+1} | E (ExtrusionEncoder) |
+| embed: Sigma_H(X) -> R^d | E (Encoder) |
 | Phi_H(tau, .) | F (FlowPredictor) |
-| pi_0 . embed^{-1} | D (StabilizationDecoder) |
+| learned inverse of the embedding | D (Decoder) |
 | F . E = E . phi' (Thm 4.1) | Commutativity loss |
 | (g,1) ~ iota(r(g)) (Def 3.4) | Gluing loss |
