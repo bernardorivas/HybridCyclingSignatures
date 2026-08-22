@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "analysis_id": "roessler_david_fourier_probability_linf_v2_david_grid",
+  "protocol": "protocol.json",
+  "bundle_root": "experiments_planned/outputs/roessler_david_fourier_continuation_v1",
+  "bundle_manifest": "bundle_manifest.json",
+  "suggested_output_root": "experiments_planned/outputs/shared_coauthor_protocol/roessler_david_fourier_probability_linf_v2_david_grid",
+  "figure_filename": "roessler_C5p0.pdf",
+  "cases": [
+    {
+      "id": "period1",
+      "title": "a = 2.82",
+      "kind": "periodic",
+      "a": 2.82,
+      "q": 1
+    },
+    {
+      "id": "period2",
+      "title": "a = 2.86",
+      "kind": "periodic",
+      "a": 2.86,
+      "q": 2
+    },
+    {
+      "id": "period4",
+      "title": "a = 4.10",
+      "kind": "periodic",
+      "a": 4.1,
+      "q": 4
+    },
+    {
+      "id": "period8",
+      "title": "a = 4.18",
+      "kind": "periodic",
+      "a": 4.18,
+      "q": 8
+    },
+    {
+      "id": "chaos",
+      "title": "a = 4.30",
+      "kind": "chaos",
+      "a": 4.3,
+      "q": null
+    }
+  ]
+}

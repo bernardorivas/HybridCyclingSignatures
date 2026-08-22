@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "protocol_id": "compass_fourier_embedded_probability_linf_david_grid_v2",
+  "statistic": "P(rank > 0)",
+  "segment_lengths": {
+    "start": 400,
+    "step": 80,
+    "stop": 4800
+  },
+  "n_runs": 20,
+  "sampling": "independent_uniform_with_replacement_per_length",
+  "seed": 20260820,
+  "duration_convention": "segment_length_times_effective_dt",
+  "effective_sample_dt": 0.0025,
+  "tangent_normalization": "linf",
+  "position_boxsize": 5.0,
+  "sphere_box_resolution": 1,
+  "metric_c": 5.0,
+  "r_min": 0.0,
+  "r_max": 5.0,
+  "r_step": 0.025,
+  "r_subdivisions": 201,
+  "field_prime": 43,
+  "require_sample_radius_below_r_max": true,
+  "plot_horizontal_radius_guide": false,
+  "plot_vertical_nominal_suspension_guides": true
+}
