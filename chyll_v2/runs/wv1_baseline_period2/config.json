@@ -1,0 +1,79 @@
+{
+  "system_name": "compass_gait",
+  "base_dim": 4,
+  "state_dim": 5,
+  "latent_dim": 11,
+  "encoder_hidden": 128,
+  "encoder_layers": 3,
+  "vfield_hidden": 128,
+  "vfield_layers": 3,
+  "decoder_hidden": 128,
+  "decoder_layers": 3,
+  "use_sin_last_layer": false,
+  "sin_omega": 30.0,
+  "n_trajectories": 800,
+  "trajectory_steps": 600,
+  "tau": 0.05,
+  "sim_rtol": 1e-08,
+  "sim_atol": 1e-10,
+  "seed": 0,
+  "glue_s_high": 0.9,
+  "glue_s_low": 0.1,
+  "w_x": 1.0,
+  "w_z": 1.0,
+  "w_g": 3.0,
+  "w_v": 1.0,
+  "w_c": 1.0,
+  "collapse_threshold": 0.3,
+  "curriculum_horizons": [
+    5,
+    10,
+    25,
+    50,
+    100
+  ],
+  "steps_per_horizon": 1000,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "batch_size": 64,
+  "grad_clip": 2.0,
+  "cosine_schedule": true,
+  "ode_method": "dopri5",
+  "ode_use_adjoint": true,
+  "ode_rtol": 1e-05,
+  "ode_atol": 1e-06,
+  "ode_step_size": 0.01,
+  "device": "cuda",
+  "run_dir": "chyll_v2/runs/wv1_baseline_period2",
+  "figure_dir": "chyll_v2/figures/compass_gait_phi_1_4.75deg",
+  "log_every": 50,
+  "save_every": 1000,
+  "system_params": {
+    "slope_config": "phi_1",
+    "compass_gait_slope_config": {
+      "label": "phi_1",
+      "phi_deg": 4.75,
+      "phi": 0.08290313946973066,
+      "expected_period": 2,
+      "fixed_points": [
+        [
+          -0.381789947562,
+          0.215983668622,
+          -0.153332476821,
+          -1.153674078371
+        ],
+        [
+          -0.415364923432,
+          0.249558644492,
+          -0.06094618432,
+          -1.182371485198
+        ]
+      ],
+      "sampling_cloud_path": null,
+      "sampling_box": null,
+      "ic_sigma": 0.005,
+      "project_to_post_impact_guard": true,
+      "source_note": "Goswami 1998 Fig. 10a period-2 gait."
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "arch": "conditional",
+  "train_slopes": [
+    "phi_1",
+    "phi_2",
+    "phi_3",
+    "phi_4"
+  ],
+  "holdout_slope": null,
+  "phi_by_slope": {
+    "phi_1": 0.08290313946973066,
+    "phi_2": 0.08726646259971647,
+    "phi_3": 0.08761552845011533,
+    "phi_4": 0.09075712110370514
+  },
+  "phi_scaler": {
+    "center": 0.0868301302867179,
+    "half": 0.00392699081698724
+  },
+  "frame": "u",
+  "latent_dim": 11
+}
